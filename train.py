@@ -3,20 +3,133 @@ import gzip
 import os
 import pickle
 import random
+from collections import Counter
 
 import numpy as np
 import torch
 import torch.nn as nn
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
+import src.models
+from src.dataset import SimpleDataset
+from src.preprocess import preprocess
 
 parser = argparse.ArgumentParser(description='Attribution ECG')
-parser.add_argument('--data_dir', type=str, help='path to dataset')
+parser.add_argument('--dataset_path', default='dataset/12000_btype_balanced.pkl', type=str, help='path to dataset')
 parser.add_argument("--gpu", default=None, type=str, help="gpu id to use")
 parser.add_argument("--seed", default=0, type=int, help="random seed")
+
+parser.add_argument("--model", default='resnet18_7', type=str)
+
+parser.add_argument("--lr", default=1e-3, type=float)
+parser.add_argument("--batch_size", default=256, type=int)
+parser.add_argument("--n_epoch", default=10, type=int)
+parser.add_argument("--weight_decay", default=1e-6, type=float)
 
 
 def main():
     args = parser.parse_args()
     setup(args)
+
+    X, labels = pickle.load(gzip.GzipFile(args.dataset_path, 'rb'))
+    X = preprocess(X)           # sample wise standardization
+    X = np.expand_dims(X, 1)    # shape: (12000, 1, 2049)
+    y = np.array([l['btype'] for l in labels]) # Extract btype label (beat label) 
+
+    for seed in range(10):
+        train(X, y, seed, args)
+
+
+def train(X, y, seed, args):
+    device = torch.device("cuda")
+
+    """
+    Split train, test
+    """
+    X_train_ds, X_test_ds, y_train_ds, y_test_ds = train_test_split(
+        X, y, train_size=0.5, stratify=y, random_state=seed
+    )
+    # print("Train: ", Counter(y_train))
+    # print("Test: ", Counter(y_test))
+
+    """
+    Model
+    """
+    model = vars(src.models)[args.model](in_channels=1, num_classes=3).to(device)
+
+    """
+    Dataloader
+    """
+    train_ds = SimpleDataset(X_train_ds, y_train_ds)
+    test_ds = SimpleDataset(X_test_ds, y_test_ds)
+
+    train_dl = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=8)
+    test_dl = DataLoader(test_ds, batch_size=args.batch_size, num_workers=8)
+
+    """
+    Optimizer
+    """
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.n_epoch)
+
+    """
+    Train
+    """
+    pbar_0 = tqdm(range(args.n_epoch), position=0)
+    for ep in pbar_0:
+        pbar_1 = tqdm(train_dl, total=len(train_dl), position=1)
+        pbar_2 = tqdm(test_dl, total=len(test_dl), position=2)
+
+        model.train()
+        y_train_true_list = []
+        y_train_pred_list = []
+        for train_batch in pbar_1: 
+            X_train, y_train_true = train_batch[0].to(device), train_batch[1].to(device)
+            
+            optimizer.zero_grad()
+            y_train_pred = model(X_train)
+            loss = criterion(y_train_pred, y_train_true)
+            loss.backward()
+            optimizer.step()
+
+            y_train_pred_onehot = torch.argmax(y_train_pred, -1)
+            y_train_true_list.append(y_train_true)
+            y_train_pred_list.append(y_train_pred_onehot)
+
+            train_acc = (torch.cat(y_train_true_list) == torch.cat(y_train_pred_list)).float().mean()
+            
+            pbar_1.set_description(
+                f"Train: [{ep + 1:03d}] "
+                f"Acc: {train_acc:.4f} "
+            )
+
+        with torch.no_grad():
+            model.eval()
+            y_test_true_list = []
+            y_test_pred_list = []
+            for test_batch in pbar_2: 
+                X_test, y_test_true = test_batch[0].to(device), test_batch[1].to(device)
+                
+                y_test_pred = model(X_test)
+                y_test_pred_onehot = torch.argmax(y_test_pred, -1)
+                
+                y_test_true_list.append(y_test_true)
+                y_test_pred_list.append(y_test_pred_onehot)
+
+                test_acc = (torch.cat(y_test_true_list) == torch.cat(y_test_pred_list)).float().mean()
+                
+                pbar_2.set_description(
+                    f" Test: [{ep + 1:03d}] "
+                    f"Acc: {test_acc:.4f} "
+                )
+            
+
+
+        
+    
 
 
 def setup(args):
