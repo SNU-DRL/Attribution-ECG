@@ -1,4 +1,5 @@
 import argparse
+import copy
 import gzip
 import os
 import pickle
@@ -17,7 +18,8 @@ from src.dataset import SimpleDataset
 from src.preprocess import preprocess
 
 parser = argparse.ArgumentParser(description='Attribution ECG')
-parser.add_argument('--dataset_path', default='dataset/12000_btype_balanced.pkl', type=str, help='path to dataset')
+parser.add_argument('--dataset_path', default='dataset/12000_btype_new.pkl', type=str, help='path to dataset')
+parser.add_argument('--results_path', default='results', type=str)
 parser.add_argument("--gpu", default=None, type=str, help="gpu id to use")
 parser.add_argument("--seed", default=0, type=int, help="random seed")
 
@@ -25,13 +27,15 @@ parser.add_argument("--model", default='resnet18_7', type=str)
 
 parser.add_argument("--lr", default=1e-3, type=float)
 parser.add_argument("--batch_size", default=256, type=int)
-parser.add_argument("--n_epoch", default=10, type=int)
+parser.add_argument("--n_epoch", default=15, type=int)
 parser.add_argument("--weight_decay", default=1e-6, type=float)
 
 
 def main():
     args = parser.parse_args()
     setup(args)
+    if not os.path.isdir(args.results_path):
+        os.mkdir(args.results_path)
 
     X, labels = pickle.load(gzip.GzipFile(args.dataset_path, 'rb'))
     X = preprocess(X)           # sample wise standardization
@@ -78,6 +82,9 @@ def train(X, y, seed, args):
     """
     Train
     """
+
+    best_test_acc = 0
+    best_model = copy.deepcopy(model)
     pbar_0 = tqdm(range(args.n_epoch), position=0)
     for ep in pbar_0:
         pbar_1 = tqdm(train_dl, total=len(train_dl), position=1)
@@ -126,10 +133,11 @@ def train(X, y, seed, args):
                     f"Acc: {test_acc:.4f} "
                 )
             
-
-
-        
+            if test_acc > best_test_acc:
+                best_test_acc = test_acc
+                best_model = copy.deepcopy(model)
     
+    torch.save(best_model, os.path.join(args.results_path, f'model_{seed}.pt'))
 
 
 def setup(args):
