@@ -13,14 +13,14 @@ from torch import Tensor
 
 
 def conv2d(in_planes: int, out_planes: int, kernel: int = 3, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
-    """3x3 convolution with padding"""
+    """1xk convolution with padding"""
     padding = int((kernel - 1) / 2)
     return nn.Conv2d(
         in_planes,
         out_planes,
-        kernel_size=kernel,
-        stride=stride,
-        padding=padding,
+        kernel_size=(1, kernel),
+        stride=(1, stride),
+        padding=(0, padding),
         groups=groups,
         bias=False,
         dilation=dilation,
@@ -173,10 +173,10 @@ class ResNet(nn.Module):
             )
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(in_channels, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(in_channels, self.inplanes, kernel_size=(1, 7), stride=(1, 2), padding=(0, 3), bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=(1, 3), stride=(1, 2), padding=(0, 1))
         self.layer1 = self._make_layer(block, 64, layers[0], kernels[0])
         self.layer2 = self._make_layer(block, 128, layers[1], kernels[1], stride=2, dilate=replace_stride_with_dilation[0])
         self.layer3 = self._make_layer(block, 256, layers[2], kernels[2], stride=2, dilate=replace_stride_with_dilation[1])
