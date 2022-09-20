@@ -12,15 +12,15 @@ from torch import Tensor
 # from ..utils import _log_api_usage_once
 
 
-def conv1d(in_planes: int, out_planes: int, kernel: int = 3, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv1d:
-    """3x3 convolution with padding"""
+def conv2d(in_planes: int, out_planes: int, kernel: int = 3, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
+    """1xk convolution with padding"""
     padding = int((kernel - 1) / 2)
-    return nn.Conv1d(
+    return nn.Conv2d(
         in_planes,
         out_planes,
-        kernel_size=kernel,
-        stride=stride,
-        padding=padding,
+        kernel_size=(1, kernel),
+        stride=(1, stride),
+        padding=(0, padding),
         groups=groups,
         bias=False,
         dilation=dilation,
@@ -29,7 +29,7 @@ def conv1d(in_planes: int, out_planes: int, kernel: int = 3, stride: int = 1, gr
 
 def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv1d:
     """1x1 convolution"""
-    return nn.Conv1d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
 class BasicBlock(nn.Module):
@@ -55,10 +55,10 @@ class BasicBlock(nn.Module):
         if dilation > 1:
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv1d(inplanes, planes, kernel, stride)
+        self.conv1 = conv2d(inplanes, planes, kernel, stride)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv1d(planes, planes, kernel)
+        self.conv2 = conv2d(planes, planes, kernel)
         self.bn2 = norm_layer(planes)
         self.downsample = downsample
         self.stride = stride
@@ -109,7 +109,7 @@ class Bottleneck(nn.Module):
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv1x1(inplanes, width)
         self.bn1 = norm_layer(width)
-        self.conv2 = conv1d(width, width, kernel, stride, groups, dilation)
+        self.conv2 = conv2d(width, width, kernel, stride, groups, dilation)
         self.bn2 = norm_layer(width)
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.bn3 = norm_layer(planes * self.expansion)
@@ -157,7 +157,7 @@ class ResNet(nn.Module):
         super().__init__()
         # _log_api_usage_once(self)
         if norm_layer is None:
-            norm_layer = nn.BatchNorm1d
+            norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
 
         self.inplanes = 64
@@ -173,15 +173,15 @@ class ResNet(nn.Module):
             )
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv1d(in_channels, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(in_channels, self.inplanes, kernel_size=(1, 7), stride=(1, 2), padding=(0, 3), bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=(1, 3), stride=(1, 2), padding=(0, 1))
         self.layer1 = self._make_layer(block, 64, layers[0], kernels[0])
         self.layer2 = self._make_layer(block, 128, layers[1], kernels[1], stride=2, dilate=replace_stride_with_dilation[0])
         self.layer3 = self._make_layer(block, 256, layers[2], kernels[2], stride=2, dilate=replace_stride_with_dilation[1])
         self.layer4 = self._make_layer(block, 512, layers[3], kernels[3], stride=2, dilate=replace_stride_with_dilation[2])
-        self.avgpool = nn.AdaptiveAvgPool1d(1)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 

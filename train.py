@@ -39,7 +39,7 @@ def main():
 
     X, labels = pickle.load(gzip.GzipFile(args.dataset_path, 'rb'))
     X = preprocess(X)           # sample wise standardization
-    X = np.expand_dims(X, 1)    # shape: (12000, 1, 2049)
+    X = np.expand_dims(X, [1, 2])    # shape: (12000, 1, 2049)
     y = np.array([l['btype'] for l in labels]) # Extract btype label (beat label) 
 
     for seed in range(10):
