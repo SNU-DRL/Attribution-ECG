@@ -16,7 +16,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 import src.models
-from src.models.attribution import to_np, compute_attr_x
+from src.attribution import to_np, compute_attr_x
 from src.dataset import SimpleDataset
 from src.preprocess import preprocess
 
