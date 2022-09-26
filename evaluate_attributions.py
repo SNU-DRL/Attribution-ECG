@@ -31,6 +31,7 @@ parser.add_argument("--n_samples", default=200, type=int, help="number of sample
 
 parser.add_argument('--attr_method', default='all')
 
+
 def main():
     args = parser.parse_args()
     setup(args)
@@ -48,6 +49,7 @@ def main():
         evaluate_attribution(X, y, y_raw, seed, args)
         break
 
+
 def evaluate_attribution(X, y, y_raw, seed, args):
     """
     Load model
@@ -64,10 +66,10 @@ def evaluate_attribution(X, y, y_raw, seed, args):
     """
     with torch.no_grad():
         zero_sample = torch.zeros((1, *X_new[0].shape)).cuda()
-        pred = to_np(F.softmax(model(zero_sample), dim=1)[0])
+        avg_min_pred = to_np(F.softmax(model(zero_sample), dim=1)[0])
 
     avg_max_prob = np.mean(prob_list)
-    avg_min_prob = np.mean(pred[1:])
+    # avg_min_prob = np.mean(pred[1:])
 
     attr_methods_list = [
         'saliency', 
@@ -106,13 +108,13 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             )
         attr_x_all = np.concatenate(attr_x_all)
 
-        results_method_dir = os.path.join(args.results_path, method)
+        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', method)
         results_method_jsonl = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.jsonl')
         results_method_json = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.json')
         results_method_plt = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.png')
 
         if not os.path.isdir(results_method_dir):
-            os.mkdir(results_method_dir)
+            os.makedirs(results_method_dir)
 
         eval_x_all = []
         pbar_eval = tqdm(range(len(X_new)))
@@ -127,8 +129,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             sample_attr_x = attr_x_all[i].squeeze()
             sample_y = y_new[i]
             sample_y_raw = y_raw_new[i]
-
-            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw, min_prob=avg_min_prob, max_prob=avg_max_prob)
+            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw, min_prob=avg_min_pred[sample_y], max_prob=avg_max_prob)
 
             sample_eval_result = {
                 'loc': loc,
@@ -196,6 +197,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
         plt.legend()
         plt.savefig(results_method_plt, bbox_inches='tight')
         plt.close()
+
 
 @torch.no_grad()
 def filter_dataset(model, X, y, y_raw, seed, args):
