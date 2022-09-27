@@ -181,7 +181,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             }
         }
         with open(results_method_json, 'w') as f:
-            json.dump(evaluation_results, f)
+            json.dump(evaluation_results, f, indent=4)
 
         plt.figure(figsize=(7, 7))
         plt.title(f"M: {method}, N: {n_samples}, is_cor: {args.correct}, thres: {args.prob_thres}, is_abs: {args.absolute}")
