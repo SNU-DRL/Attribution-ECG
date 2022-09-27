@@ -19,7 +19,7 @@ from src.preprocess import preprocess
 
 parser = argparse.ArgumentParser(description='Attribution ECG')
 parser.add_argument('--dataset_path', default='dataset/12000_btype_new.pkl', type=str, help='path to dataset')
-parser.add_argument('--results_path', default='test', type=str)
+parser.add_argument('--results_path', default='results_eval', type=str)
 parser.add_argument("--gpu", default=None, type=str, help="gpu id to use")
 parser.add_argument("--seed", default=0, type=int, help="random seed")
 
@@ -47,7 +47,7 @@ def main():
     y = np.array([l['btype'] for l in labels])
     y_raw = np.array([l['btype_raw'] for l in labels], dtype=object)
 
-    for seed in range(2):
+    for seed in range(5):
         evaluate_attribution(X, y, y_raw, seed, args)
 
 
@@ -90,7 +90,10 @@ def evaluate_attribution(X, y, y_raw, seed, args):
         Get attributions
         """
         attr_x_all = []
-        pbar_method = tqdm(range(num_batch + 1))
+        if len(X_new) % bs:
+            pbar_method = tqdm(range(num_batch + 1))
+        else:
+            pbar_method = tqdm(range(num_batch))
         for bn in pbar_method:
             X_batch = torch.from_numpy(X_new[bn * bs: (bn + 1) * bs]).cuda()
             y_batch = y_new[bn * bs: (bn + 1) * bs]
@@ -111,7 +114,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             filter_method = 'correct'
         else:
             filter_method = f'thres_{args.prob_thres}'
-        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', filter_method, f'abs_{args.absolute}', method)
+        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', filter_method, f'abs_{args.absolute}', f'replace_{args.perturb_replace}', method)
         results_method_jsonl = os.path.join(results_method_dir, f'attr_eval_per_sample.jsonl')
         results_method_json = os.path.join(results_method_dir, f'attr_eval_all.json')
         results_method_plt = os.path.join(results_method_dir, f'attr_eval_curve.png')
