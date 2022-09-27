@@ -37,7 +37,7 @@ def main():
     setup(args)
 
     if not os.path.isdir(args.results_path):
-        os.mkdir(args.results_path)
+        os.makedirs(args.results_path, exist_ok=True)
 
     X, labels = pickle.load(gzip.GzipFile(args.dataset_path, 'rb'))
     X = preprocess(X) 
