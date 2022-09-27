@@ -71,7 +71,7 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace='ze
 
             replace_values = {
                 'zero': np.zeros(window_size),
-                'mean': np.full(window_size, (left_end + right_end) / 2),
+                'mean': np.full(window_size, x[idx].mean()),
                 'linear': np.linspace(left_end, right_end, window_size)
             }[replace]
             x[idx] = replace_values
@@ -86,33 +86,29 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace='ze
         LeRF_rank = np.argsort(score_per_window)
         MoRF_rank = LeRF_rank[::-1]
 
-        LeRF_prob_list = []
-        MoRF_prob_list = []
+        LeRF_x_list = []
+        MoRF_x_list = []
 
-        init_prob = F.softmax(model(torch.tensor(new_x).reshape(1, 1, 1, -1).cuda()), dim=1)[0, true_label].item()
-        LeRF_prob_list.append(init_prob)
-        MoRF_prob_list.append(init_prob)
+        LeRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
+        MoRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
         
         new_x = np.copy(x[:-1])
         for window_idx in LeRF_rank:
             new_x = perturb(new_x, window_idx, replace=replace)
-            LeRF_prob = F.softmax(model(torch.tensor(new_x).reshape(1, 1, 1, -1).cuda()), dim=1)[0, true_label].item()
-            LeRF_prob_list.append(LeRF_prob)
+            LeRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
         
         new_x = np.copy(x[:-1])
         for window_idx in MoRF_rank:
             new_x = perturb(new_x, window_idx, replace=replace)
-            MoRF_prob = F.softmax(model(torch.tensor(new_x).reshape(1, 1, 1, -1).cuda()), dim=1)[0, true_label].item()
-            MoRF_prob_list.append(MoRF_prob)
+            MoRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
 
-        max_prob = init_prob
-        min_prob = MoRF_prob_list[-1]
+        LeRF_x = torch.cat(LeRF_x_list, 0)
+        MoRF_x = torch.cat(MoRF_x_list, 0)
 
-        normalized_LeRF_prob_list = (np.array(LeRF_prob_list) - min_prob) / (max_prob - min_prob)
-        normalized_MoRF_prob_list = (np.array(MoRF_prob_list) - min_prob) / (max_prob - min_prob)
+        LeRF_prob = F.softmax(model(LeRF_x.cuda()), dim=1)[:, true_label]
+        MoRF_prob = F.softmax(model(MoRF_x.cuda()), dim=1)[:, true_label]
 
-        area = (normalized_LeRF_prob_list - normalized_MoRF_prob_list).sum()
-        return {'area': area, 'LeRF': normalized_LeRF_prob_list.tolist(), 'MoRF': normalized_MoRF_prob_list.tolist()}
+        return {'LeRF': LeRF_prob.tolist(), 'MoRF': MoRF_prob.tolist()}
     
     loc_metric = localization_error(attr_x, true_label, boundaries_per_label, x=x, model=model)
     pnt_metric = pointing_game(attr_x, true_label, boundaries_per_label, x=x, model=model)

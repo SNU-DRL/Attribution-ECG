@@ -19,7 +19,7 @@ from src.preprocess import preprocess
 
 parser = argparse.ArgumentParser(description='Attribution ECG')
 parser.add_argument('--dataset_path', default='dataset/12000_btype_new.pkl', type=str, help='path to dataset')
-parser.add_argument('--results_path', default='results_eval', type=str)
+parser.add_argument('--results_path', default='test', type=str)
 parser.add_argument("--gpu", default=None, type=str, help="gpu id to use")
 parser.add_argument("--seed", default=0, type=int, help="random seed")
 
@@ -85,7 +85,9 @@ def evaluate_attribution(X, y, y_raw, seed, args):
     bs = 10
     num_batch = len(X_new) // bs
     for method in attr_methods:
-        
+        """
+        Get attributions
+        """
         attr_x_all = []
         pbar_method = tqdm(range(num_batch + 1))
         for bn in pbar_method:
@@ -101,6 +103,9 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             )
         attr_x_all = np.concatenate(attr_x_all)
 
+        """
+        Logging files
+        """
         results_method_dir = os.path.join(args.results_path, f'seed_{seed}', method)
         results_method_jsonl = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.jsonl')
         results_method_json = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.json')
@@ -109,14 +114,17 @@ def evaluate_attribution(X, y, y_raw, seed, args):
         if not os.path.isdir(results_method_dir):
             os.makedirs(results_method_dir)
 
-        eval_x_all = []
-        pbar_eval = tqdm(range(len(X_new)))
         
         # To empty file
         f = open(results_method_jsonl, "w")
         f.close()
-
         f = open(results_method_jsonl, "a")
+
+        eval_x_all = []
+        pbar_eval = tqdm(range(len(X_new)))
+        """
+        Evaluate attributions
+        """
         for i in pbar_eval:
             sample_x = X_new[i].squeeze()
             sample_attr_x = attr_x_all[i].squeeze()
@@ -125,6 +133,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw)
 
             sample_eval_result = {
+                'y': sample_y.item(),
                 'loc': loc,
                 'pnt': pnt,
                 'per': per
@@ -161,10 +170,32 @@ def evaluate_attribution(X, y, y_raw, seed, args):
         """
         Perturbation
         """
+        true_labels = np.array([s['y'] for s in eval_x_all])
         LeRFs = np.array([s['per']['LeRF'] for s in eval_x_all])
         MoRFs = np.array([s['per']['MoRF'] for s in eval_x_all])
-        LeRF = np.mean(LeRFs, axis=0)
-        MoRF = np.mean(MoRFs, axis=0)
+
+        """
+        Label wise normalization
+        """
+        normalized_LeRFs = np.zeros_like(LeRFs)
+        normalized_MoRFs = np.zeros_like(MoRFs)
+        for l in np.unique(true_labels):
+            label_idx = np.arange(len(true_labels))[true_labels == l]
+            
+            LeRF_to_normalize = LeRFs[label_idx]
+            MoRF_to_normalize = MoRFs[label_idx]
+
+            LeRF_init, LeRF_last = LeRF_to_normalize[:, 0].mean(), LeRF_to_normalize[:, -1].mean()
+            MoRF_init, MoRF_last = MoRF_to_normalize[:, 0].mean(), MoRF_to_normalize[:, -1].mean()
+
+            normalized_LeRF = (LeRF_to_normalize - LeRF_last) / (LeRF_init- LeRF_last)
+            normalized_MoRF = (MoRF_to_normalize - MoRF_last) / (MoRF_init- MoRF_last)
+
+            normalized_LeRFs[label_idx] = normalized_LeRF
+            normalized_MoRFs[label_idx] = normalized_MoRF
+
+        LeRF = np.mean(normalized_LeRFs, axis=0)
+        MoRF = np.mean(normalized_MoRFs, axis=0)
         area = np.sum(LeRF - MoRF)
 
         evaluation_results = {
