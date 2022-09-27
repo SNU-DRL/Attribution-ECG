@@ -26,6 +26,8 @@ parser.add_argument("--seed", default=0, type=int, help="random seed")
 parser.add_argument("--prob_thres", default=0.9, type=float)
 parser.add_argument("--correct", action='store_true')
 parser.add_argument("--absolute", action='store_true')
+parser.add_argument("--attr_bs", default=10, type=int)
+parser.add_argument("--perturb_replace", default='zero')
 
 parser.add_argument("--n_samples", default=200, type=int, help="number of samples used for lime or shap")
 
@@ -47,7 +49,6 @@ def main():
 
     for seed in range(2):
         evaluate_attribution(X, y, y_raw, seed, args)
-        break
 
 
 def evaluate_attribution(X, y, y_raw, seed, args):
@@ -82,7 +83,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
     else:
         attr_methods = [args.attr_method]
 
-    bs = 10
+    bs = args.attr_bs
     num_batch = len(X_new) // bs
     for method in attr_methods:
         """
@@ -106,10 +107,14 @@ def evaluate_attribution(X, y, y_raw, seed, args):
         """
         Logging files
         """
-        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', method)
-        results_method_jsonl = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.jsonl')
-        results_method_json = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.json')
-        results_method_plt = os.path.join(results_method_dir, f'attr_eval_cor{args.correct}_thres{args.prob_thres}_abs{args.absolute}.png')
+        if args.correct:
+            filter_method = 'correct'
+        else:
+            filter_method = f'thres_{args.prob_thres}'
+        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', filter_method, f'abs_{args.absolute}', method)
+        results_method_jsonl = os.path.join(results_method_dir, f'attr_eval_per_sample.jsonl')
+        results_method_json = os.path.join(results_method_dir, f'attr_eval_all.json')
+        results_method_plt = os.path.join(results_method_dir, f'attr_eval_curve.png')
 
         if not os.path.isdir(results_method_dir):
             os.makedirs(results_method_dir)
@@ -130,7 +135,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             sample_attr_x = attr_x_all[i].squeeze()
             sample_y = y_new[i]
             sample_y_raw = y_raw_new[i]
-            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw)
+            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw, perturb_replace=args.perturb_replace)
 
             sample_eval_result = {
                 'y': sample_y.item(),
