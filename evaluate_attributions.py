@@ -64,13 +64,6 @@ def evaluate_attribution(X, y, y_raw, seed, args):
     """
     Get min, max prob for MoRF, LeRF curve
     """
-    with torch.no_grad():
-        zero_sample = torch.zeros((1, *X_new[0].shape)).cuda()
-        avg_min_pred = to_np(F.softmax(model(zero_sample), dim=1)[0])
-
-    avg_max_prob = np.mean(prob_list)
-    # avg_min_prob = np.mean(pred[1:])
-
     attr_methods_list = [
         'saliency', 
         'integrated_gradients', 
@@ -129,7 +122,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             sample_attr_x = attr_x_all[i].squeeze()
             sample_y = y_new[i]
             sample_y_raw = y_raw_new[i]
-            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw, min_prob=avg_min_pred[sample_y], max_prob=avg_max_prob)
+            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw)
 
             sample_eval_result = {
                 'loc': loc,

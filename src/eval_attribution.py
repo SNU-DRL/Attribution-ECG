@@ -11,7 +11,7 @@ ds_beat_names = {
 }
 
 @torch.no_grad()
-def evaluate_attr_x(x, model, attr_x, true_label, raw_label, min_prob=0, max_prob=1):
+def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace='zero'):
     """
     x: numpy
     model: torch
@@ -50,7 +50,7 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, min_prob=0, max_pro
         return {'correct': correct}
     
     @torch.no_grad()
-    def perturbation_based(attr_x, true_label, boundaries_per_label, x, model, min_prob=0, max_prob=1, replace='zero', window_size=16, **kwargs):
+    def perturbation_based(attr_x, true_label, boundaries_per_label, x, model, replace='zero', window_size=16, **kwargs):
         """
         replace
         - zero: replace the erased part with 0
@@ -105,6 +105,9 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, min_prob=0, max_pro
             MoRF_prob = F.softmax(model(torch.tensor(new_x).reshape(1, 1, 1, -1).cuda()), dim=1)[0, true_label].item()
             MoRF_prob_list.append(MoRF_prob)
 
+        max_prob = init_prob
+        min_prob = MoRF_prob_list[-1]
+
         normalized_LeRF_prob_list = (np.array(LeRF_prob_list) - min_prob) / (max_prob - min_prob)
         normalized_MoRF_prob_list = (np.array(MoRF_prob_list) - min_prob) / (max_prob - min_prob)
 
@@ -113,8 +116,7 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, min_prob=0, max_pro
     
     loc_metric = localization_error(attr_x, true_label, boundaries_per_label, x=x, model=model)
     pnt_metric = pointing_game(attr_x, true_label, boundaries_per_label, x=x, model=model)
-    per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, 
-                                    replace='zero', min_prob=min_prob, max_prob=max_prob)
+    per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace=perturb_replace)
     return loc_metric, pnt_metric, per_metric
 
 
