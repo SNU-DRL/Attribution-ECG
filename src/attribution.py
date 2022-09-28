@@ -1,31 +1,39 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from captum.attr import Saliency, IntegratedGradients, DeepLiftShap, Lime, LayerGradCam, GuidedGradCam, InputXGradient, KernelShap, FeatureAblation, LayerAttribution, LRP, DeepLift
+from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation,
+                         GuidedGradCam, InputXGradient, IntegratedGradients,
+                         KernelShap, LayerAttribution, LayerGradCam, Lime,
+                         Saliency)
 from captum.attr import visualization as viz
+
 
 def compute_attr_x(model, attr_method, input_tensor, n_samples=200, absolute=False):
     ## Select target (predicted label)
     yhat = model(input_tensor)
     softmax_yhat = F.softmax(yhat, dim=1)
     prediction_score, pred_label_idx = torch.topk(softmax_yhat, 1)
+    pred_label_idx.squeeze_()
+    # print("pred_label_idx.shape", pred_label_idx.shape)
 
-    attribution_dict = {"saliency": Saliency(model),
-                        "integrated_gradients": IntegratedGradients(model),
-                        "input_gradient": InputXGradient(model),
-                        "lrp": LRP(model),
-                        "lime": Lime(model),
-                        "kernel_shap": KernelShap(model),
-                        "deep_lift": DeepLift(model),
-                        "deep_lift_shap": DeepLiftShap(model),
-                        "gradcam": LayerGradCam(model, model.layer4),
-                        "guided_gradcam": GuidedGradCam(model, model.layer4),
-                        "feature_ablation": FeatureAblation(model),
+    attribution_dict = {"saliency": Saliency,
+                        "integrated_gradients": IntegratedGradients,
+                        "input_gradient": InputXGradient,
+                        "lrp": LRP,
+                        "lime": Lime,
+                        "kernel_shap": KernelShap,
+                        "deep_lift": DeepLift,
+                        "deep_lift_shap": DeepLiftShap,
+                        "gradcam": LayerGradCam,
+                        "guided_gradcam": GuidedGradCam,
+                        "feature_ablation": FeatureAblation,
                         }
 
     ## Load attribution function
-    attr_func = attribution_dict[attr_method]
+    if 'gradcam' in attr_method:
+        attr_func = attribution_dict[attr_method](model, model.layer4)
+    else:
+        attr_func = attribution_dict[attr_method](model)
     
     ## Conduct attribution method
     if attr_method in ["lime", "kernel_shap"]:
