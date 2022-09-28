@@ -27,7 +27,7 @@ parser.add_argument("--prob_thres", default=0.9, type=float)
 parser.add_argument("--correct", action='store_true')
 parser.add_argument("--absolute", action='store_true')
 parser.add_argument("--attr_bs", default=10, type=int)
-parser.add_argument("--perturb_replace", default='zero')
+# parser.add_argument("--perturb_replace", default='zero')
 
 parser.add_argument("--n_samples", default=200, type=int, help="number of samples used for lime or shap")
 
@@ -49,7 +49,7 @@ def main():
 
     for seed in range(5):
         evaluate_attribution(X, y, y_raw, seed, args)
-
+        break
 
 def evaluate_attribution(X, y, y_raw, seed, args):
     """
@@ -114,10 +114,9 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             filter_method = 'correct'
         else:
             filter_method = f'thres_{args.prob_thres}'
-        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', filter_method, f'abs_{args.absolute}', f'replace_{args.perturb_replace}', method)
+        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', filter_method, f'abs_{args.absolute}', method)
         results_method_jsonl = os.path.join(results_method_dir, f'attr_eval_per_sample.jsonl')
         results_method_json = os.path.join(results_method_dir, f'attr_eval_all.json')
-        results_method_plt = os.path.join(results_method_dir, f'attr_eval_curve.png')
 
         if not os.path.isdir(results_method_dir):
             os.makedirs(results_method_dir)
@@ -138,7 +137,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             sample_attr_x = attr_x_all[i].squeeze()
             sample_y = y_new[i]
             sample_y_raw = y_raw_new[i]
-            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw, perturb_replace=args.perturb_replace)
+            loc, pnt, per = evaluate_attr_x(sample_x, model, sample_attr_x, sample_y, sample_y_raw)
 
             sample_eval_result = {
                 'y': sample_y.item(),
@@ -154,8 +153,9 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             )
             
         f.close()
+
         n_samples = len(eval_x_all)
-        
+
         """
         Localization
         """
@@ -169,43 +169,12 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             'mean': np.mean(iou_all),
             'std': np.std(iou_all)
         }
-
+        
         """
         Pointing game
         """
         pnt_acc = np.mean([s['pnt']['correct'] for s in eval_x_all])
-
-        """
-        Perturbation
-        """
-        true_labels = np.array([s['y'] for s in eval_x_all])
-        LeRFs = np.array([s['per']['LeRF'] for s in eval_x_all])
-        MoRFs = np.array([s['per']['MoRF'] for s in eval_x_all])
-
-        """
-        Label wise normalization
-        """
-        normalized_LeRFs = np.zeros_like(LeRFs)
-        normalized_MoRFs = np.zeros_like(MoRFs)
-        for l in np.unique(true_labels):
-            label_idx = np.arange(len(true_labels))[true_labels == l]
-            
-            LeRF_to_normalize = LeRFs[label_idx]
-            MoRF_to_normalize = MoRFs[label_idx]
-
-            LeRF_init, LeRF_last = LeRF_to_normalize[:, 0].mean(), LeRF_to_normalize[:, -1].mean()
-            MoRF_init, MoRF_last = MoRF_to_normalize[:, 0].mean(), MoRF_to_normalize[:, -1].mean()
-
-            normalized_LeRF = (LeRF_to_normalize - LeRF_last) / (LeRF_init- LeRF_last)
-            normalized_MoRF = (MoRF_to_normalize - MoRF_last) / (MoRF_init- MoRF_last)
-
-            normalized_LeRFs[label_idx] = normalized_LeRF
-            normalized_MoRFs[label_idx] = normalized_MoRF
-
-        LeRF = np.mean(normalized_LeRFs, axis=0)
-        MoRF = np.mean(normalized_MoRFs, axis=0)
-        area = np.sum(LeRF - MoRF)
-
+        
         evaluation_results = {
             'n_samples': n_samples,
             'loc': {
@@ -213,22 +182,57 @@ def evaluate_attribution(X, y, y_raw, seed, args):
                 'iou': iou
             },
             'pnt': pnt_acc,
-            'per': {
+        }
+
+        for per_method in ['zero', 'mean', 'linear']:
+            """
+            Perturbation
+            """
+            true_labels = np.array([s['y'] for s in eval_x_all])
+            LeRFs = np.array([s['per'][per_method]['LeRF'] for s in eval_x_all])
+            MoRFs = np.array([s['per'][per_method]['MoRF'] for s in eval_x_all])
+
+            """
+            Label wise normalization
+            """
+            normalized_LeRFs = np.zeros_like(LeRFs)
+            normalized_MoRFs = np.zeros_like(MoRFs)
+            for l in np.unique(true_labels):
+                label_idx = np.arange(len(true_labels))[true_labels == l]
+                
+                LeRF_to_normalize = LeRFs[label_idx]
+                MoRF_to_normalize = MoRFs[label_idx]
+
+                LeRF_init, LeRF_last = LeRF_to_normalize[:, 0].mean(), LeRF_to_normalize[:, -1].mean()
+                MoRF_init, MoRF_last = MoRF_to_normalize[:, 0].mean(), MoRF_to_normalize[:, -1].mean()
+
+                normalized_LeRF = (LeRF_to_normalize - LeRF_last) / (LeRF_init- LeRF_last)
+                normalized_MoRF = (MoRF_to_normalize - MoRF_last) / (MoRF_init- MoRF_last)
+
+                normalized_LeRFs[label_idx] = normalized_LeRF
+                normalized_MoRFs[label_idx] = normalized_MoRF
+
+            LeRF = np.mean(normalized_LeRFs, axis=0)
+            MoRF = np.mean(normalized_MoRFs, axis=0)
+            area = np.sum(LeRF - MoRF)
+            
+            evaluation_results[per_method] = {
                 'area': area,
                 'LeRF': LeRF.tolist(),
                 'MoRF': MoRF.tolist(),
             }
-        }
+
+            results_method_plt = os.path.join(results_method_dir, f'attr_eval_curve_{per_method}.png')
+            plt.figure(figsize=(7, 7))
+            plt.title(f"M: {method}, replace: {per_method}, Area: {area:.4f}, N: {n_samples}, is_cor: {args.correct}, thres: {args.prob_thres}, is_abs: {args.absolute}")
+            plt.plot(LeRF, label='LeRF')
+            plt.plot(MoRF, label='MoRF')
+            plt.legend()
+            plt.savefig(results_method_plt, bbox_inches='tight')
+            plt.close()
+        
         with open(results_method_json, 'w') as f:
             json.dump(evaluation_results, f, indent=4)
-
-        plt.figure(figsize=(7, 7))
-        plt.title(f"M: {method}, N: {n_samples}, is_cor: {args.correct}, thres: {args.prob_thres}, is_abs: {args.absolute}")
-        plt.plot(LeRF, label='LeRF')
-        plt.plot(MoRF, label='MoRF')
-        plt.legend()
-        plt.savefig(results_method_plt, bbox_inches='tight')
-        plt.close()
 
 
 @torch.no_grad()
