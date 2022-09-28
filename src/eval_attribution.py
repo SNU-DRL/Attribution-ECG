@@ -11,7 +11,7 @@ ds_beat_names = {
 }
 
 @torch.no_grad()
-def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace='zero'):
+def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_list=['zero', 'mean', 'linear', 'gaussian', 'gaussian_plus']):
     """
     x: numpy
     model: torch
@@ -72,7 +72,9 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace='ze
             replace_values = {
                 'zero': np.zeros(window_size),
                 'mean': np.full(window_size, x[idx].mean()),
-                'linear': np.linspace(left_end, right_end, window_size)
+                'linear': np.linspace(left_end, right_end, window_size),
+                'gaussian': np.random.randn(window_size),
+                'gaussian_plus': x[idx] + np.random.randn(window_size)
             }[replace]
             x[idx] = replace_values
             x = x.reshape(-1)
@@ -110,9 +112,17 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace='ze
 
         return {'LeRF': LeRF_prob.tolist(), 'MoRF': MoRF_prob.tolist()}
     
+    # zero_per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace='zero')
+    # mean_per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace='mean')
+    # linear_per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace='linear')
+
+
     loc_metric = localization_error(attr_x, true_label, boundaries_per_label, x=x, model=model)
     pnt_metric = pointing_game(attr_x, true_label, boundaries_per_label, x=x, model=model)
-    per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace=perturb_replace)
+    per_metric = {}
+    for replace in perturb_replace_list:
+        per_metric[replace] = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace=replace)
+
     return loc_metric, pnt_metric, per_metric
 
 

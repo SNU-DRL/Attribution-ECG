@@ -184,7 +184,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             'pnt': pnt_acc,
         }
 
-        for per_method in ['zero', 'mean', 'linear']:
+        for per_method in ['zero', 'mean', 'linear', 'gaussian', 'gaussian_plus']:
             """
             Perturbation
             """
