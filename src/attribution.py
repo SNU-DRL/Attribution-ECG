@@ -2,10 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from captum.attr import Saliency, IntegratedGradients, DeepLiftShap, Lime, LayerGradCam, GuidedGradCam, InputXGradient, KernelShap, FeatureAblation, LayerAttribution, LRP, DeepLift, GuidedBackprop
+from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation,
+                         GuidedGradCam, InputXGradient, IntegratedGradients,
+                         KernelShap, LayerAttribution, LayerGradCam, Lime,
+                         Saliency)
 from captum.attr import visualization as viz
 
-def compute_attr_x(model, attr_method, input_tensor, n_samples=128, feature_mask_window=16, absolute=False):
+
+def compute_attr_x(model, attr_method, input_tensor, n_samples=200, feature_mask_window=16, absolute=False):
     ## Select target (predicted label)
     yhat = model(input_tensor)
     softmax_yhat = F.softmax(yhat, dim=1)
@@ -24,9 +28,16 @@ def compute_attr_x(model, attr_method, input_tensor, n_samples=128, feature_mask
                         "guided_gradcam": GuidedGradCam(model, model.layer4),
                         "feature_ablation": FeatureAblation(model),
                         }
+                        
+    pred_label_idx.squeeze_()
+    # print("pred_label_idx.shape", pred_label_idx.shape)
+
 
     ## Load attribution function
-    attr_func = attribution_dict[attr_method]
+    if 'gradcam' in attr_method:
+        attr_func = attribution_dict[attr_method](model, model.layer4)
+    else:
+        attr_func = attribution_dict[attr_method](model)
     
     ## Conduct attribution method
     if attr_method in ["lime", "kernel_shap"]:

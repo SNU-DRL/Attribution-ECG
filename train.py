@@ -53,7 +53,7 @@ def train(X, y, seed, args):
     Split train, test
     """
     X_train_ds, X_test_ds, y_train_ds, y_test_ds = train_test_split(
-        X, y, train_size=0.5, stratify=y, random_state=seed
+        X, y, train_size=0.5, test_size=0.5, stratify=y, random_state=seed
     )
     # print("Train: ", Counter(y_train))
     # print("Test: ", Counter(y_test))
@@ -136,7 +136,6 @@ def train(X, y, seed, args):
             if test_acc > best_test_acc:
                 best_test_acc = test_acc
                 best_model = copy.deepcopy(model)
-    
     torch.save(best_model, os.path.join(args.results_path, f'model_{seed}.pt'))
 
 
