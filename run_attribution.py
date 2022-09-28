@@ -31,7 +31,8 @@ parser.add_argument("--model", default='resnet18_7', type=str)
 
 parser.add_argument("--input_idx", default=0, type=int, help="Index of a test input")
 parser.add_argument("--attr_method", default='saliency', type=str, help="Attribution method, if all => all methods")
-parser.add_argument("--n_samples", default=200, type=int, help="number of samples used for lime or shap")
+parser.add_argument("--n_samples", default=128, type=int, help="number of samples used for lime or shap")
+parser.add_argument("--feature_mask_window", default=16, type=int, help="window of feature mask for Feature Ablation method")
 
 def main():
     args = parser.parse_args()
@@ -55,7 +56,7 @@ def main():
     input_tensor = torch.Tensor(X_test_ds[args.input_idx]).unsqueeze(0).cuda()
     
     ## Compute attribution for an input
-    attr_x = compute_attr_x(model, args.attr_method, input_tensor, args.n_samples)
+    attr_x = compute_attr_x(model, args.attr_method, input_tensor, args.n_samples, args.feature_mask_window)
     torch.save(attr_x, args.results_path + args.attr_method + "_" + str(args.input_idx) + ".pt")
 
 def setup(args):
