@@ -30,6 +30,7 @@ parser.add_argument("--attr_bs", default=10, type=int)
 # parser.add_argument("--perturb_replace", default='zero')
 
 parser.add_argument("--n_samples", default=200, type=int, help="number of samples used for lime or shap")
+parser.add_argument("--seed_to_eval", default=None, type=int)
 
 parser.add_argument('--attr_method', default='all')
 
@@ -47,9 +48,11 @@ def main():
     y = np.array([l['btype'] for l in labels])
     y_raw = np.array([l['btype_raw'] for l in labels], dtype=object)
 
-    for seed in range(5):
-        evaluate_attribution(X, y, y_raw, seed, args)
-        break
+    if args.seed_to_eval is None:
+        for seed in range(5):
+            evaluate_attribution(X, y, y_raw, seed, args)
+    else:
+        evaluate_attribution(X, y, y_raw, args.seed_to_eval, args)
 
 def evaluate_attribution(X, y, y_raw, seed, args):
     """
@@ -69,6 +72,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
         'saliency', 
         'integrated_gradients', 
         'input_gradient', 
+        'guided_backporp',
         'lrp', 
         'lime', 
         'kernel_shap', 
@@ -114,7 +118,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             filter_method = 'correct'
         else:
             filter_method = f'thres_{args.prob_thres}'
-        results_method_dir = os.path.join(args.results_path, f'seed_{seed}', filter_method, f'abs_{args.absolute}', method)
+        results_method_dir = os.path.join(args.results_path, filter_method, f'abs_{args.absolute}', f'seed_{seed}', method)
         results_method_jsonl = os.path.join(results_method_dir, f'attr_eval_per_sample.jsonl')
         results_method_json = os.path.join(results_method_dir, f'attr_eval_all.json')
 
