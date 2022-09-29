@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation,
+from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation, GuidedBackprop,
                          GuidedGradCam, InputXGradient, IntegratedGradients,
                          KernelShap, LayerAttribution, LayerGradCam, Lime,
                          Saliency)
@@ -15,18 +15,18 @@ def compute_attr_x(model, attr_method, input_tensor, n_samples=200, feature_mask
     softmax_yhat = F.softmax(yhat, dim=1)
     prediction_score, pred_label_idx = torch.topk(softmax_yhat, 1)
 
-    attribution_dict = {"saliency": Saliency(model),
-                        "integrated_gradients": IntegratedGradients(model),
-                        "input_gradient": InputXGradient(model),
-                        "guided_backporp": GuidedBackprop(model),
-                        "lrp": LRP(model),
-                        "lime": Lime(model),
-                        "kernel_shap": KernelShap(model),
-                        "deep_lift": DeepLift(model),
-                        "deep_lift_shap": DeepLiftShap(model),
-                        "gradcam": LayerGradCam(model, model.layer4),
-                        "guided_gradcam": GuidedGradCam(model, model.layer4),
-                        "feature_ablation": FeatureAblation(model),
+    attribution_dict = {"saliency": Saliency,
+                        "integrated_gradients": IntegratedGradients,
+                        "input_gradient": InputXGradient,
+                        "guided_backporp": GuidedBackprop,
+                        "lrp": LRP,
+                        "lime": Lime,
+                        "kernel_shap": KernelShap,
+                        "deep_lift": DeepLift,
+                        "deep_lift_shap": DeepLiftShap,
+                        "gradcam": LayerGradCam,
+                        "guided_gradcam": GuidedGradCam,
+                        "feature_ablation": FeatureAblation,
                         }
                         
     pred_label_idx.squeeze_()
