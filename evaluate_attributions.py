@@ -81,6 +81,7 @@ def evaluate_attribution(X, y, y_raw, seed, args):
         'gradcam',
         'guided_gradcam',
         'feature_ablation',
+        'random_baseline'
     ]
     if args.attr_method == 'all':
         attr_methods = attr_methods_list
@@ -102,15 +103,16 @@ def evaluate_attribution(X, y, y_raw, seed, args):
             X_batch = torch.from_numpy(X_new[bn * bs: (bn + 1) * bs]).cuda()
             y_batch = y_new[bn * bs: (bn + 1) * bs]
             y_raw_batch = y_raw_new[bn * bs: (bn + 1) * bs]
-            
-            attr_x = to_np(compute_attr_x(model, method, X_batch, absolute=args.absolute))
+            if method == 'random_baseline':
+                attr_x = np.random.randn(*X_batch.shape)
+            else:
+                attr_x = to_np(compute_attr_x(model, method, X_batch, absolute=args.absolute))
             attr_x_all.append(attr_x)
             
             pbar_method.set_description(
                 f"Method: {method}"
             )
         attr_x_all = np.concatenate(attr_x_all)
-
         """
         Logging files
         """
