@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation, GuidedBackprop,
-                         GuidedGradCam, InputXGradient, IntegratedGradients,
-                         KernelShap, LayerAttribution, LayerGradCam, Lime,
-                         Saliency)
+from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation,
+                         GuidedBackprop, GuidedGradCam, InputXGradient,
+                         IntegratedGradients, KernelShap, LayerAttribution,
+                         LayerGradCam, Lime, Saliency)
 from captum.attr import visualization as viz
 
 
@@ -18,7 +17,7 @@ def compute_attr_x(model, attr_method, input_tensor, n_samples=200, feature_mask
     attribution_dict = {"saliency": Saliency,
                         "integrated_gradients": IntegratedGradients,
                         "input_gradient": InputXGradient,
-                        "guided_backporp": GuidedBackprop,
+                        "guided_backprop": GuidedBackprop,
                         "lrp": LRP,
                         "lime": Lime,
                         "kernel_shap": KernelShap,
