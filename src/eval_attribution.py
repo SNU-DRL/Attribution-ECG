@@ -11,7 +11,7 @@ ds_beat_names = {
 }
 
 @torch.no_grad()
-def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_list=['zero', 'mean', 'linear', 'gaussian', 'gaussian_plus']):
+def evaluate_attr_x(x, model, attr_x, true_label, raw_label, degradation_method_list=['mean', 'linear', 'gaussian_plus']):
     """
     x: numpy
     model: torch
@@ -23,10 +23,10 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_lis
     x = np.squeeze(x)
     attr_x = np.squeeze(attr_x)
     
-    boundaries_per_label = get_boundaries_per_label(raw_label)
+    boundaries_per_label = get_boundaries_by_label(raw_label)
     flat_raw_label = flatten_raw_label(raw_label)
     flat_raw_label = dict(sorted(flat_raw_label.items()))
-    def localization_error(attr_x, true_label, boundaries_per_label, **kwargs):
+    def localization_score(attr_x, true_label, boundaries_per_label, **kwargs):
         N = 0
         true_idx = []
         for boundary in boundaries_per_label[true_label]:
@@ -37,9 +37,8 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_lis
         pred_idx = set(attr_topN)
 
         iou = len(pred_idx & true_idx) / len(pred_idx | true_idx)
-        acc = len(pred_idx - (pred_idx - true_idx)) / len(true_idx)
 
-        return {'acc': acc, 'iou': iou}
+        return {'iou': iou}
 
     def pointing_game(attr_x, true_label, boundaries_per_label, **kwargs):
         attr_top1 = np.argmax(attr_x)
@@ -50,14 +49,14 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_lis
         return {'correct': correct}
     
     @torch.no_grad()
-    def perturbation_based(attr_x, true_label, boundaries_per_label, x, model, replace='zero', window_size=16, **kwargs):
+    def degradation_score(attr_x, true_label, boundaries_per_label, x, model, method='mean', window_size=16, **kwargs):
         """
-        replace
+        methods
         - zero: replace the erased part with 0
         - mean: replace the erased part with the mean of each edge
         - linear: replace the erased part with the linear interpolation of each edge
         """
-        def perturb(x, idx, replace, window_size=window_size):
+        def degrade(x, idx, method, window_size=window_size):
             x = x.reshape(-1, window_size)
             if idx == 0:
                 left_end = x[idx][0]
@@ -75,7 +74,7 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_lis
                 'linear': np.linspace(left_end, right_end, window_size),
                 'gaussian': np.random.randn(window_size),
                 'gaussian_plus': x[idx] + np.random.randn(window_size)
-            }[replace]
+            }[method]
             x[idx] = replace_values
             x = x.reshape(-1)
             return x
@@ -96,12 +95,12 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_lis
         
         new_x = np.copy(x[:-1])
         for window_idx in LeRF_rank:
-            new_x = perturb(new_x, window_idx, replace=replace)
+            new_x = degrade(new_x, window_idx, method=method)
             LeRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
         
         new_x = np.copy(x[:-1])
         for window_idx in MoRF_rank:
-            new_x = perturb(new_x, window_idx, replace=replace)
+            new_x = degrade(new_x, window_idx, method=method)
             MoRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
 
         LeRF_x = torch.cat(LeRF_x_list, 0)
@@ -111,22 +110,17 @@ def evaluate_attr_x(x, model, attr_x, true_label, raw_label, perturb_replace_lis
         MoRF_prob = F.softmax(model(MoRF_x.cuda()), dim=1)[:, true_label]
 
         return {'LeRF': LeRF_prob.tolist(), 'MoRF': MoRF_prob.tolist()}
-    
-    # zero_per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace='zero')
-    # mean_per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace='mean')
-    # linear_per_metric = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace='linear')
 
-
-    loc_metric = localization_error(attr_x, true_label, boundaries_per_label, x=x, model=model)
+    loc_metric = localization_score(attr_x, true_label, boundaries_per_label, x=x, model=model)
     pnt_metric = pointing_game(attr_x, true_label, boundaries_per_label, x=x, model=model)
-    per_metric = {}
-    for replace in perturb_replace_list:
-        per_metric[replace] = perturbation_based(attr_x, true_label, boundaries_per_label, x=x, model=model, replace=replace)
+    deg_metric = {}
+    for method in degradation_method_list:
+        deg_metric[method] = degradation_score(attr_x, true_label, boundaries_per_label, x=x, model=model, method=method)
 
-    return loc_metric, pnt_metric, per_metric
+    return loc_metric, pnt_metric, deg_metric
 
 
-def get_boundaries_per_label(raw_label):
+def get_boundaries_by_label(raw_label):
     flat_raw_label = flatten_raw_label(raw_label)
     flat_raw_label = dict(sorted(flat_raw_label.items()))
 
