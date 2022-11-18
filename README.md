@@ -17,12 +17,23 @@ Original source: [Icentia11k: An Unsupervised ECG Representation Learning Datase
     pip install -r requirements.txt
 ```
 
+
 ### Training a model
 ```
     python train.py
 ```
+You will get a trained model in the directory specified in `--results_path` argument.
+
+### Run feature attribution methods
+```
+    python run_attribution.py
+```
+You need to specify the path of a trained model in line 53 (will be fixed).
+You will get the matrix of feature attribution result in the directory specified in `--results_path`.
 
 ### Evaluating feature attribution methods
 ```
     python evaluate_attributions.py
 ```
+You need to pass the path of a trained model with `--model_path` argument.
+You will get result files(`attr_eval_all.json`) in the directory specified in `--results_path`.
