@@ -1,5 +1,5 @@
 # Evaluating Feature Attribution Methods for Electrocardiogram
-This repository contains the code for experiments in our paper, *EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*.
+This repository contains the code for experiments in our paper, [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
 
 **NOTICE: Our paper is under review as of now, and we are planning to include more details here when our paper is published so other researchers can reproduce our experiments and use our implementation code.**
 
