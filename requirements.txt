@@ -1,3 +1,4 @@
 tqdm
 matplotlib
-sklearn
+scikit-learn
+captum

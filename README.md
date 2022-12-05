@@ -33,7 +33,7 @@ You will get the matrix of feature attribution result in the directory specified
 
 ### Evaluating feature attribution methods
 ```
-    python evaluate_attributions.py
+    python evaluate_attributions.py --gpu $gpu --attr_method $method --model_path $model_path --results_path results_dir 
 ```
 You need to pass the path of a trained model with `--model_path` argument.
 You will get result files(`attr_eval_all.json`) in the directory specified in `--results_path`.
