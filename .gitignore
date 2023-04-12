@@ -1,3 +1,10 @@
+# For this project
+results/
+results_eval/
+old/
+*.pkl
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,8 +134,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-results/*
-results_eval/*
-
-*.pkl
