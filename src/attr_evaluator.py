@@ -1,4 +1,5 @@
 import os
+import json
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,17 +8,17 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.attribution import compute_attr_x, evaluate_attr_x
+from src.attribution import get_attribution, evaluate_attribution
 from src.dataset import ECG_Dataset
 
 
 class Evaluator:
-    def __init__(self, model, loader, prob_threshold, batch_size, device):
+    def __init__(self, model, loader, prob_threshold, device, result_dir):
         self.model = model
         self.loader = loader
         self.prob_threshold = prob_threshold
-        self.batch_size = batch_size
         self.device = device
+        self.result_dir = result_dir
 
         self.model.eval()
         self.model.to(self.device)
@@ -25,86 +26,53 @@ class Evaluator:
         self.attr_loader = self.build_attr_loader()
 
     def eval(self, attr_method, absolute):
-        attr_list = []
+        eval_result_list = []
         print(f"Attribution method: {attr_method}, absolute: {absolute}")
-        for idx_batch, data_batch in enumerate(pbar := tqdm(self.attr_loader)):
+        for idx_batch, data_batch in enumerate(
+            pbar := tqdm(self.attr_loader)
+        ):  # batch size set to 1
             idx, x, y = data_batch
             x = x.to(self.device)
             if attr_method == "random_baseline":
                 attr_x = np.random.randn(*x.shape)
             else:
-                attr_x = compute_attr_x(self.model, attr_method, x, absolute=absolute)
+                attr_x = get_attribution(self.model, attr_method, x, absolute=absolute)
                 attr_x = attr_x.detach().cpu().numpy()
-            attr_list.append(attr_x)
 
-        attr_all = np.concatenate(attr_list) # shape: (2820, 1, 1, 2049)
+            x = x.detach().cpu().squeeze().numpy()
+            y = int(y.detach().cpu().squeeze().numpy())
+            y_raw = self.attr_loader.dataset.y_raw[idx.item()]
 
-        """
-        Logging files
-        """
-        filter_method = f"thres_{args.prob_thres}"
-        results_method_dir = os.path.join(
-            args.results_path,
-            filter_method,
-            f"abs_{args.absolute}",
-            f"seed_{seed}",
-            method,
-        )
-        results_method_jsonl = os.path.join(
-            results_method_dir, f"attr_eval_per_sample.jsonl"
-        )
-        results_method_json = os.path.join(results_method_dir, f"attr_eval_all.json")
-
-        if not os.path.isdir(results_method_dir):
-            os.makedirs(results_method_dir)
-
-        # To empty file
-        f = open(results_method_jsonl, "w")
-        f.close()
-        f = open(results_method_jsonl, "a")
-
-        eval_x_all = []
-        pbar_eval = tqdm(range(len(X_new)))
-        """
-        Evaluate attributions
-        """
-        for i in pbar_eval:
-            sample_x = X_new[i].squeeze()
-            sample_attr_x = attr_x_all[i].squeeze()
-            sample_y = y_new[i]
-            sample_y_raw = y_raw_new[i]
-            loc, pnt, deg = evaluate_attr_x(
-                sample_x, model, sample_attr_x, sample_y, sample_y_raw
-            )
+            loc, pnt, deg = evaluate_attribution(x, self.model, attr_x, y, y_raw)
 
             sample_eval_result = {
-                "y": sample_y.item(),
+                "y": y,
                 "loc": loc,
                 "pnt": pnt,
                 "deg": deg,
             }
-            eval_x_all.append(sample_eval_result)
-            f.write(json.dumps(sample_eval_result) + "\n")
 
-            pbar_eval.set_description(f"Eval: {method}")
+            eval_result_list.append(sample_eval_result)
 
-        f.close()
+        eval_result_dir = os.path.join(
+            self.result_dir, f"thres_{self.prob_threshold}_{attr_method}_abs_{absolute}"
+        )
 
-        n_samples = len(eval_x_all)
+        os.makedirs(eval_result_dir, exist_ok=True)
 
         """
         Localization
         """
-        iou_all = [s["loc"]["iou"] for s in eval_x_all]
+        iou_all = [s["loc"]["iou"] for s in eval_result_list]
         iou = {"mean": np.mean(iou_all), "std": np.std(iou_all)}
 
         """
         Pointing game
         """
-        pnt_acc = np.mean([s["pnt"]["correct"] for s in eval_x_all])
+        pnt_acc = np.mean([s["pnt"]["correct"] for s in eval_result_list])
 
         evaluation_results = {
-            "n_samples": n_samples,
+            "n_samples": len(eval_result_list),
             "loc": {"iou": iou},
             "pnt": pnt_acc,
         }
@@ -113,9 +81,9 @@ class Evaluator:
             """
             Degradation
             """
-            true_labels = np.array([s["y"] for s in eval_x_all])
-            LeRFs = np.array([s["deg"][deg_method]["LeRF"] for s in eval_x_all])
-            MoRFs = np.array([s["deg"][deg_method]["MoRF"] for s in eval_x_all])
+            true_labels = np.array([s["y"] for s in eval_result_list])
+            LeRFs = np.array([s["deg"][deg_method]["LeRF"] for s in eval_result_list])
+            MoRFs = np.array([s["deg"][deg_method]["MoRF"] for s in eval_result_list])
 
             """
             Label wise normalization
@@ -157,21 +125,19 @@ class Evaluator:
                 "MoRF": MoRF.tolist(),
             }
 
-            results_method_plt = os.path.join(
-                results_method_dir, f"attr_eval_curve_{deg_method}.png"
-            )
             plt.figure(figsize=(7, 7))
             plt.title(
-                f"M: {method}, replace: {deg_method}, Area: {area:.4f}, N: {n_samples}, thres: {args.prob_thres}, is_abs: {args.absolute}"
+                f"M: {attr_method}, replace: {deg_method}, Area: {area:.4f}, N: {len(eval_result_list)}, thres: {self.prob_threshold}, is_abs: {absolute}"
             )
             plt.plot(LeRF, label="LeRF")
             plt.plot(MoRF, label="MoRF")
             plt.legend()
-            plt.savefig(results_method_plt, bbox_inches="tight")
+            plt.savefig(f"{eval_result_dir}/attr_eval_curve_{deg_method}.png", bbox_inches="tight")
             plt.close()
 
-        with open(results_method_json, "w") as f:
+        with open(f"{eval_result_dir}/eval_result.json", "w") as f:
             json.dump(evaluation_results, f, indent=4)
+
 
     @torch.no_grad()
     def build_attr_loader(self):
@@ -202,5 +168,7 @@ class Evaluator:
                     attr_y_raw.append(self.loader.dataset.y_raw[idx[i]])
                     attr_prob.append(prob[label])
 
-        attr_dataset = ECG_Dataset(np.array(attr_x), np.array(attr_y), attr_y_raw, attr_prob)
-        return DataLoader(attr_dataset, pin_memory=True, batch_size=self.batch_size, shuffle=False)
+        attr_dataset = ECG_Dataset(
+            np.array(attr_x), np.array(attr_y), attr_y_raw, attr_prob
+        )
+        return DataLoader(attr_dataset, pin_memory=True, batch_size=1, shuffle=False)

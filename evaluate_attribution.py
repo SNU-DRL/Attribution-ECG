@@ -28,16 +28,16 @@ def main(args):
     device = setup(args)
 
     # dataloader
-    data_module = ECG_DataModule(
-        args.dataset_path, batch_size=args.batch_size, seed=args.seed
-    )
+    data_module = ECG_DataModule(args.dataset_path, batch_size=128, seed=args.seed)
     test_loader = data_module.test_dataloader()
 
     # model
     model = torch.load(args.model_path)
 
     # initalize attribution evaluator
-    evaluator = Evaluator(model, test_loader, args.prob_threshold, args.batch_size, device)
+    evaluator = Evaluator(
+        model, test_loader, args.prob_threshold, device, args.result_dir
+    )
     if args.attr_method == "all":
         for attr_method in ATTRIBUTION_METHODS:
             evaluator.eval(attr_method, args.absolute)
@@ -54,9 +54,7 @@ if __name__ == "__main__":
     )
 
     # Model
-    parser.add_argument(
-        "--model_path", default="./result/model_last.pt", type=str
-    )
+    parser.add_argument("--model_path", default="./result/model_last.pt", type=str)
     parser.add_argument(
         "--prob_threshold",
         default=0.9,
@@ -65,9 +63,8 @@ if __name__ == "__main__":
     )
 
     # Attribution method
-    parser.add_argument("--attr_method", default="all", type=str)
+    parser.add_argument("--attr_method", default="saliency", type=str)
     parser.add_argument("--absolute", action="store_true")
-    parser.add_argument("--batch_size", default=10, type=int)
     parser.add_argument(
         "--n_samples",
         default=200,
