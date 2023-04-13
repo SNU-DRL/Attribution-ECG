@@ -3,8 +3,10 @@ import pickle
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
+from tqdm import tqdm
 
 from src.utils import preprocess
 
@@ -60,3 +62,40 @@ class ECG_Dataset(Dataset):
         X = self.X[idx]
         y = self.y[idx]
         return idx, X, y
+
+@torch.no_grad()
+def get_attr_loader(dataloader, model, prob_threshold, device):
+    """
+    return dataloader for evaluating attribution methods (samples with correct prediction with high prob.)
+    """
+    attr_x = []
+    attr_y = []
+    attr_y_raw = []
+    attr_prob = []
+
+    for idx_batch, data_batch in enumerate(pbar := tqdm(dataloader)):
+        idx, x, y = data_batch
+        x = x.to(device)
+        y_hat = model(x)
+        probs = F.softmax(y_hat, dim=1)
+
+        idx = idx.detach().numpy()
+        x = x.detach().cpu().numpy()
+        y = y.detach().numpy()
+        probs = probs.detach().cpu().numpy()
+
+        # 1) Remove label 0
+        # 2) Select samples with prob > threshold
+        for i in range(len(idx)):
+            label = y[i]
+            prob = probs[i]
+            if label > 0 and prob[label] > prob_threshold:
+                attr_x.append(x[i])
+                attr_y.append(label)
+                attr_y_raw.append(dataloader.dataset.y_raw[idx[i]])
+                attr_prob.append(prob[label])
+
+    attr_dataset = ECG_Dataset(
+        np.array(attr_x), np.array(attr_y), attr_y_raw, attr_prob
+    )
+    return DataLoader(attr_dataset, pin_memory=True, batch_size=1, shuffle=False)

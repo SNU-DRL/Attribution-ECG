@@ -1,45 +1,119 @@
-import os
 import json
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.attribution import get_attribution, evaluate_attribution
-from src.dataset import ECG_Dataset
+from src.attribution import (apply_attr_method, degradation_score,
+                             localization_score, pointing_game)
+from src.utils import get_boundaries_by_label
 
 
 class Evaluator:
-    def __init__(self, model, dataloader, prob_threshold, device, result_dir):
+    def __init__(self, model, dataloader, device, result_dir):
         self.model = model
-        self.prob_threshold = prob_threshold
         self.device = device
         self.result_dir = result_dir
-        self.attr_loader = self.build_attr_loader(dataloader)
+        self.dataloader = dataloader
 
         self.model.eval()
         self.model.to(self.device)
 
-    def eval(self, attr_method, absolute):
-        eval_result_list = []
+    def compute_attribution(self, attr_method, absolute):
         print(f"Attribution method: {attr_method}, absolute: {absolute}")
+        attr_list = []
         for idx_batch, data_batch in enumerate(
-            pbar := tqdm(self.attr_loader)
+            pbar := tqdm(self.dataloader)
         ):  # batch size set to 1
             idx, x, y = data_batch
             x = x.to(self.device)
             if attr_method == "random_baseline":
                 attr_x = np.random.randn(*x.shape)
             else:
-                attr_x = get_attribution(self.model, attr_method, x, absolute=absolute)
+                attr_x = apply_attr_method(
+                    self.model, attr_method, x, absolute=absolute
+                )
+                attr_x = attr_x.detach().cpu().numpy()
+
+            attr_list.append(attr_x)
+
+        return attr_list
+
+    def get_localization_score(self, attr_list):
+        score_list = []
+        for idx_batch, data_batch in enumerate(
+            pbar := tqdm(self.dataloader)
+        ):  # batch size set to 1
+            idx, x, y = data_batch
+
+            x = x.detach().cpu().squeeze().numpy()
+            attr_x = np.squeeze(attr_list[idx])
+            y = int(y.detach().cpu().squeeze().numpy())
+            y_raw = self.dataloader.dataset.y_raw[idx.item()]
+            boundaries_per_label = get_boundaries_by_label(y_raw)
+
+            score = localization_score(attr_x, y, boundaries_per_label)
+            score_list.append(score)
+        return score_list
+
+    def get_pointing_game_score(self, attr_list):
+        pointing_game_results = []
+        for idx_batch, data_batch in enumerate(
+            pbar := tqdm(self.dataloader)
+        ):  # batch size set to 1
+            idx, x, y = data_batch
+
+            x = x.detach().cpu().squeeze().numpy()
+            attr_x = np.squeeze(attr_list[idx])
+            y = int(y.detach().cpu().squeeze().numpy())
+            y_raw = self.dataloader.dataset.y_raw[idx.item()]
+            boundaries_per_label = get_boundaries_by_label(y_raw)
+
+            correct = pointing_game(attr_x, y, boundaries_per_label)
+            pointing_game_results.append(correct)
+
+        return np.mean(pointing_game_results)
+
+    def get_degradation_score(self, attr_list, deg_method):
+        score_list_lerf, score_list_morf = [], []
+
+        for idx_batch, data_batch in enumerate(
+            pbar := tqdm(self.dataloader)
+        ):  # batch size set to 1
+            idx, x, y = data_batch
+
+            x = x.detach().cpu().squeeze().numpy()
+            attr_x = np.squeeze(attr_list[idx])
+            y = int(y.detach().cpu().squeeze().numpy())
+
+            lerf_probs, morf_probs = degradation_score(
+                attr_x, y, x, self.model, deg_method
+            )
+            score_list_lerf.append(lerf_probs)
+            score_list_morf.append(morf_probs)
+
+        return score_list_lerf, score_list_morf
+
+    def eval(self, attr_method, absolute):
+        eval_result_list = []
+        print(f"Attribution method: {attr_method}, absolute: {absolute}")
+        for idx_batch, data_batch in enumerate(
+            pbar := tqdm(self.dataloader)
+        ):  # batch size set to 1
+            idx, x, y = data_batch
+            x = x.to(self.device)
+            if attr_method == "random_baseline":
+                attr_x = np.random.randn(*x.shape)
+            else:
+                attr_x = apply_attr_method(
+                    self.model, attr_method, x, absolute=absolute
+                )
                 attr_x = attr_x.detach().cpu().numpy()
 
             x = x.detach().cpu().squeeze().numpy()
             y = int(y.detach().cpu().squeeze().numpy())
-            y_raw = self.attr_loader.dataset.y_raw[idx.item()]
+            y_raw = self.dataloader.dataset.y_raw[idx.item()]
 
             loc, pnt, deg = evaluate_attribution(x, self.model, attr_x, y, y_raw)
 
@@ -138,40 +212,3 @@ class Evaluator:
 
         with open(f"{eval_result_dir}/eval_result.json", "w") as f:
             json.dump(evaluation_results, f, indent=4)
-
-    @torch.no_grad()
-    def build_attr_loader(self, dataloader):
-        """
-        Build dataloader for evaluating attribution methods (samples with correct prediction with high prob.)
-        """
-        attr_x = []
-        attr_y = []
-        attr_y_raw = []
-        attr_prob = []
-
-        for idx_batch, data_batch in enumerate(pbar := tqdm(dataloader)):
-            idx, x, y = data_batch
-            x = x.to(self.device)
-            y_hat = self.model(x)
-            probs = F.softmax(y_hat, dim=1)
-
-            idx = idx.detach().numpy()
-            x = x.detach().cpu().numpy()
-            y = y.detach().numpy()
-            probs = probs.detach().cpu().numpy()
-
-            # 1) Remove label 0
-            # 2) Select samples with prob > threshold
-            for i in range(len(idx)):
-                label = y[i]
-                prob = probs[i]
-                if label > 0 and prob[label] > self.prob_threshold:
-                    attr_x.append(x[i])
-                    attr_y.append(label)
-                    attr_y_raw.append(dataloader.dataset.y_raw[idx[i]])
-                    attr_prob.append(prob[label])
-
-        attr_dataset = ECG_Dataset(
-            np.array(attr_x), np.array(attr_y), attr_y_raw, attr_prob
-        )
-        return DataLoader(attr_dataset, pin_memory=True, batch_size=1, shuffle=False)

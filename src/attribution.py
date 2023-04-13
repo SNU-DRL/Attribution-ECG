@@ -1,26 +1,13 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-from captum.attr import (
-    LRP,
-    DeepLift,
-    DeepLiftShap,
-    FeatureAblation,
-    GuidedBackprop,
-    GuidedGradCam,
-    InputXGradient,
-    IntegratedGradients,
-    KernelShap,
-    LayerAttribution,
-    LayerGradCam,
-    Lime,
-    Saliency,
-)
-
-from utils import get_boundaries_by_label, flatten_raw_label
+from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation,
+                         GuidedBackprop, GuidedGradCam, InputXGradient,
+                         IntegratedGradients, KernelShap, LayerAttribution,
+                         LayerGradCam, Lime, Saliency)
 
 
-def get_attribution(
+def apply_attr_method(
     model,
     attr_method,
     input_tensor,
@@ -99,45 +86,7 @@ def get_attribution(
     return attr_x
 
 
-def evaluate_attribution(
-    x,
-    model,
-    attr_x,
-    true_label,
-    raw_label,
-    degradation_method_list=["mean", "linear", "gaussian_plus"],
-):
-    """
-    x: numpy
-    model: torch
-    attr_x: numpy
-    true_label: str
-    raw_label: list
-    """
-    model.eval()
-    x = np.squeeze(x)
-    attr_x = np.squeeze(attr_x)
-
-    boundaries_per_label = get_boundaries_by_label(raw_label)
-    flat_raw_label = flatten_raw_label(raw_label)
-    flat_raw_label = dict(sorted(flat_raw_label.items()))
-
-    loc_metric = localization_score(
-        attr_x, true_label, boundaries_per_label, x=x, model=model
-    )
-    pnt_metric = pointing_game(
-        attr_x, true_label, boundaries_per_label, x=x, model=model
-    )
-    deg_metric = {}
-    for method in degradation_method_list:
-        deg_metric[method] = degradation_score(
-            attr_x, true_label, boundaries_per_label, x=x, model=model, method=method
-        )
-
-    return loc_metric, pnt_metric, deg_metric
-
-
-def localization_score(attr_x, true_label, boundaries_per_label, **kwargs):
+def localization_score(attr_x, true_label, boundaries_per_label):
     N = 0
     true_idx = []
     for boundary in boundaries_per_label[true_label]:
@@ -148,28 +97,25 @@ def localization_score(attr_x, true_label, boundaries_per_label, **kwargs):
     pred_idx = set(attr_topN)
 
     iou = len(pred_idx & true_idx) / len(pred_idx | true_idx)
+    return iou
 
-    return {"iou": iou}
 
-
-def pointing_game(attr_x, true_label, boundaries_per_label, **kwargs):
+def pointing_game(attr_x, true_label, boundaries_per_label):
     attr_top1 = np.argmax(attr_x)
 
     correct = False
     for boundary in boundaries_per_label[true_label]:
         correct = correct or (attr_top1 in range(*boundary))
-    return {"correct": correct}
+    return correct
 
 
 def degradation_score(
     attr_x,
     true_label,
-    boundaries_per_label,
     x,
     model,
     method="mean",
     window_size=16,
-    **kwargs
 ):
     """
     methods
@@ -207,7 +153,7 @@ def degradation_score(
         LeRF_prob = F.softmax(model(LeRF_x), dim=1)[:, true_label]
         MoRF_prob = F.softmax(model(MoRF_x), dim=1)[:, true_label]
 
-    return {"LeRF": LeRF_prob.tolist(), "MoRF": MoRF_prob.tolist()}
+    return LeRF_prob.tolist(), MoRF_prob.tolist()
 
 
 def degrade(x, idx, method, window_size):

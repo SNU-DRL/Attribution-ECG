@@ -3,8 +3,8 @@ import os
 
 import torch
 
+from src.dataset import ECG_DataModule, get_attr_loader
 from src.evaluator import Evaluator
-from src.dataset import ECG_DataModule
 from src.setup import setup
 
 ATTRIBUTION_METHODS = [
@@ -35,14 +35,13 @@ def main(args):
     model = torch.load(args.model_path)
 
     # initalize attribution evaluator
-    evaluator = Evaluator(
-        model, test_loader, args.prob_threshold, device, args.result_dir
-    )
-    if args.attr_method == "all":
-        for attr_method in ATTRIBUTION_METHODS:
-            evaluator.eval(attr_method, args.absolute)
-    else:
-        evaluator.eval(args.attr_method, args.absolute)
+    attr_loader = get_attr_loader(test_loader, model, args.prob_threshold, device)
+    evaluator = Evaluator(model, attr_loader, device, args.result_dir)
+
+    attr_list = evaluator.compute_attribution(args.attr_method, args.absolute)
+    localization_score = evaluator.get_localization_score(attr_list) # These functions should return one scalar value
+    pointing_game_score = evaluator.get_pointing_game_score(attr_list) # These functions should save additional results(ex. plots) in the function
+    degradation_score = evaluator.get_degradation_score(attr_list, "linear")
 
 
 if __name__ == "__main__":
@@ -63,7 +62,7 @@ if __name__ == "__main__":
     )
 
     # Attribution method
-    parser.add_argument("--attr_method", default="saliency", type=str)
+    parser.add_argument("--attr_method", default="gradcam", type=str)
     parser.add_argument("--absolute", action="store_true")
     parser.add_argument(
         "--n_samples",
