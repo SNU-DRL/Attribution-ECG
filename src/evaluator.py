@@ -13,17 +13,15 @@ from src.dataset import ECG_Dataset
 
 
 class Evaluator:
-    def __init__(self, model, loader, prob_threshold, device, result_dir):
+    def __init__(self, model, dataloader, prob_threshold, device, result_dir):
         self.model = model
-        self.loader = loader
         self.prob_threshold = prob_threshold
         self.device = device
         self.result_dir = result_dir
+        self.attr_loader = self.build_attr_loader(dataloader)
 
         self.model.eval()
         self.model.to(self.device)
-
-        self.attr_loader = self.build_attr_loader()
 
     def eval(self, attr_method, absolute):
         eval_result_list = []
@@ -132,21 +130,26 @@ class Evaluator:
             plt.plot(LeRF, label="LeRF")
             plt.plot(MoRF, label="MoRF")
             plt.legend()
-            plt.savefig(f"{eval_result_dir}/attr_eval_curve_{deg_method}.png", bbox_inches="tight")
+            plt.savefig(
+                f"{eval_result_dir}/attr_eval_curve_{deg_method}.png",
+                bbox_inches="tight",
+            )
             plt.close()
 
         with open(f"{eval_result_dir}/eval_result.json", "w") as f:
             json.dump(evaluation_results, f, indent=4)
 
-
     @torch.no_grad()
-    def build_attr_loader(self):
+    def build_attr_loader(self, dataloader):
+        """
+        Build dataloader for evaluating attribution methods (samples with correct prediction with high prob.)
+        """
         attr_x = []
         attr_y = []
         attr_y_raw = []
         attr_prob = []
 
-        for idx_batch, data_batch in enumerate(pbar := tqdm(self.loader)):
+        for idx_batch, data_batch in enumerate(pbar := tqdm(dataloader)):
             idx, x, y = data_batch
             x = x.to(self.device)
             y_hat = self.model(x)
@@ -165,7 +168,7 @@ class Evaluator:
                 if label > 0 and prob[label] > self.prob_threshold:
                     attr_x.append(x[i])
                     attr_y.append(label)
-                    attr_y_raw.append(self.loader.dataset.y_raw[idx[i]])
+                    attr_y_raw.append(dataloader.dataset.y_raw[idx[i]])
                     attr_prob.append(prob[label])
 
         attr_dataset = ECG_Dataset(

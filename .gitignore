@@ -1,6 +1,5 @@
 # For this project
-results/
-results_eval/
+result*/
 old/
 *.pkl
 .vscode/

@@ -3,7 +3,7 @@ import os
 
 import torch
 
-from src.attr_evaluator import Evaluator
+from src.evaluator import Evaluator
 from src.dataset import ECG_DataModule
 from src.setup import setup
 
