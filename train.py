@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 
 import torch
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset_path", default="dataset/12000_btype_new.pkl", type=str
+        "--dataset_path", default="./data/12000_btype_new.pkl", type=str
     )
 
     # Model
@@ -49,9 +50,9 @@ if __name__ == "__main__":
 
     # Hyperparameters
     parser.add_argument("--batch_size", default=128, type=int)
-    parser.add_argument("--learning_rate", default=5e-4, type=float)
-    parser.add_argument("--epochs", default=50, type=int)
-    parser.add_argument("--weight_decay", default=1e-7, type=float)
+    parser.add_argument("--learning_rate", default=1e-4, type=float)
+    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--weight_decay", default=1e-4, type=float)
 
     # Settings
     parser.add_argument("--gpu_num", default=None, type=str)
@@ -62,6 +63,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # Save arguments
+    with open(os.path.join(args.result_dir, "args.json"), "w") as f:
+        json.dump(vars(args), f, indent=4)    
+    print(json.dumps(vars(args), indent=4))
+    
     os.makedirs(args.result_dir, exist_ok=True)
 
     main(args)

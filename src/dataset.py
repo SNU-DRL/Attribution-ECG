@@ -47,10 +47,11 @@ class ECG_DataModule:
 
 
 class ECG_Dataset(Dataset):
-    def __init__(self, X, y, y_raw):
+    def __init__(self, X, y, y_raw, prob=None):
         self.X = torch.from_numpy(X)
         self.y = torch.from_numpy(y)
         self.y_raw = y_raw
+        self.prob = prob
 
     def __len__(self):
         return len(self.y)
@@ -58,5 +59,4 @@ class ECG_Dataset(Dataset):
     def __getitem__(self, idx):
         X = self.X[idx]
         y = self.y[idx]
-        y_raw = self.y_raw[idx]
-        return X, y, y_raw
+        return idx, X, y

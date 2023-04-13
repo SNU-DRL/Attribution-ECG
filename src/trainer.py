@@ -2,6 +2,7 @@
 
 import time
 
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
@@ -60,7 +61,7 @@ class Trainer:
             )
 
             # validate
-            val_loss, val_accuracy = self._validate(val_loader, is_test=False)
+            val_loss, val_accuracy = self._validate(val_loader)
             print(
                 f"- [{epoch:03d}/{epochs:03d}] Validation loss: {val_loss:.4f}, Validation accuracy: {val_accuracy:.4f}"
             )
@@ -99,21 +100,27 @@ class Trainer:
         self.model.train()
         total_loss = 0.0
 
-        probs = []
         labels = []
+        probs = []
 
         for idx_batch, data_batch in enumerate(pbar := tqdm(loader)):
-            x, y, _ = data_batch
+            _, x, y = data_batch
             x, y = x.to(self.device), y.to(self.device)
             y_hat = self.model(x)
+            _probs = F.softmax(y_hat, dim=1)
 
             self.optimizer.zero_grad()
             loss = self._compute_loss(y_hat, y)
             loss.backward()
             self.optimizer.step()
-
             total_loss += y_hat.shape[0] * loss.item()
             pbar.set_postfix({"loss": f"{loss.item():.4f}"})
+
+            labels.extend(y)
+            probs.extend(_probs)
+
+        labels = torch.tensor(labels).detach().cpu().numpy()
+        probs = torch.stack(probs).detach().cpu().numpy()
 
         total_loss /= len(loader.dataset)
         accuracy = self._compute_accuracy(labels, probs)
@@ -125,11 +132,11 @@ class Trainer:
         self.model.eval()
         total_loss = 0.0
 
-        probs = []
         labels = []
+        probs = []
 
         for idx_batch, data_batch in enumerate(pbar := tqdm(loader)):
-            x, y, _ = data_batch
+            _, x, y = data_batch
             x, y = x.to(self.device), y.to(self.device)
             y_hat = self.model(x)
             _probs = F.softmax(y_hat, dim=1)
@@ -142,7 +149,7 @@ class Trainer:
             probs.extend(_probs)
 
         labels = torch.tensor(labels).detach().cpu().numpy()
-        probs = torch.tensor(probs).detach().cpu().numpy()
+        probs = torch.stack(probs).detach().cpu().numpy()
 
         total_loss /= len(loader.dataset)
         accuracy = self._compute_accuracy(labels, probs)
@@ -158,10 +165,7 @@ class Trainer:
         return loss
 
     def _compute_accuracy(self, labels, probs):
-        # y_train_pred_onehot = torch.argmax(y_train_pred, -1)
-        # y_train_true_list.append(y_train_true)
-        # y_train_pred_list.append(y_train_pred_onehot)
+        preds = np.argmax(probs, axis=1)
+        acc = (labels == preds).mean()
 
-        # acc = (torch.cat(y_train_true_list) == torch.cat(y_train_pred_list)).float().mean()
-
-        return 99.99
+        return acc

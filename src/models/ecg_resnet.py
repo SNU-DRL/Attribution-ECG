@@ -10,11 +10,9 @@ __all__ = [
     "resnet18",
     "resnet34",
     "resnet50",
-    "resnet18_15",
-    "resnet18_15_v2",
-    "resnet34_15",
-    "resnet34_15_v2",
-    "resnet50_15",
+    "resnet18_7",
+    "resnet34_7",
+    "resnet50_7",
 ]
 
 
@@ -344,23 +342,13 @@ def resnet50(**kwargs: Any) -> ResNet:
     return _resnet("resnet50", Bottleneck, [3, 4, 6, 3], [3, 3, 3, 3], **kwargs)
 
 
-def resnet18_15(**kwargs: Any) -> ResNet:
-    return _resnet("resnet18_15", BasicBlock, [2, 2, 2, 2], [15, 15, 15, 15], **kwargs)
+def resnet18_7(**kwargs: Any) -> ResNet:
+    return _resnet("resnet18_7", BasicBlock, [2, 2, 2, 2], [7, 7, 7, 7], **kwargs)
 
 
-def resnet18_15_v2(**kwargs: Any) -> ResNet:
-    return _resnet("resnet18_15", BasicBlock, [2, 2, 2, 2], [15, 13, 11, 9], **kwargs)
+def resnet34_7(**kwargs: Any) -> ResNet:
+    return _resnet("resnet34_7", BasicBlock, [3, 4, 6, 3], [7, 7, 7, 7], **kwargs)
 
 
-def resnet34_15(**kwargs: Any) -> ResNet:
-    return _resnet("resnet34_15", BasicBlock, [3, 4, 6, 3], [15, 15, 15, 15], **kwargs)
-
-
-def resnet34_15_v2(**kwargs: Any) -> ResNet:
-    return _resnet(
-        "resnet34_15_v2", BasicBlock, [3, 4, 6, 3], [15, 13, 11, 9], **kwargs
-    )
-
-
-def resnet50_15(**kwargs: Any) -> ResNet:
-    return _resnet("resnet50_15", Bottleneck, [3, 4, 6, 3], [15, 15, 15, 15], **kwargs)
+def resnet50_7(**kwargs: Any) -> ResNet:
+    return _resnet("resnet50_7", Bottleneck, [3, 4, 6, 3], [7, 7, 7, 7], **kwargs)
