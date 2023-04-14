@@ -124,25 +124,25 @@ def degradation_score(
     - mean: replace the erased part with the mean of each edge
     - linear: replace the erased part with the linear interpolation of each edge
     """
-
-    new_x, attr_x = x[:-1], attr_x[:-1]
-    attr_x_reshaped = attr_x.reshape(-1, window_size)
-    score_per_window = attr_x_reshaped.sum(1)
-    LeRF_rank = np.argsort(score_per_window)
+    truncate_idx = len(x) % window_size
+    x, attr_x = x[:-truncate_idx], attr_x[:-truncate_idx]
+    attr_x = attr_x.reshape(-1, window_size)
+    attr_window_score = attr_x.sum(1)
+    LeRF_rank = np.argsort(attr_window_score)
     MoRF_rank = LeRF_rank[::-1]
 
     LeRF_x_list = []
     MoRF_x_list = []
 
-    LeRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
-    MoRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
+    LeRF_x_list.append(torch.tensor(x).reshape(1, 1, 1, -1))
+    MoRF_x_list.append(torch.tensor(x).reshape(1, 1, 1, -1))
 
-    degraded_x = np.copy(new_x)
+    degraded_x = np.copy(x)
     for window_idx in LeRF_rank:
         degraded_x = degrade(degraded_x, window_idx, method, window_size)
         LeRF_x_list.append(torch.tensor(degraded_x).reshape(1, 1, 1, -1))
 
-    degraded_x = np.copy(new_x)
+    degraded_x = np.copy(x)
     for window_idx in MoRF_rank:
         degraded_x = degrade(degraded_x, window_idx, method, window_size)
         MoRF_x_list.append(torch.tensor(degraded_x).reshape(1, 1, 1, -1))
@@ -169,13 +169,16 @@ def degrade(x, idx, method, window_size):
         left_end = x[idx - 1][-1]
         right_end = x[idx + 1][0]
 
-    replace_values = {
-        "zero": np.zeros(window_size),
-        "mean": np.full(window_size, x[idx].mean()),
-        "linear": np.linspace(left_end, right_end, window_size),
-        "gaussian": np.random.randn(window_size),
-        "gaussian_plus": x[idx] + np.random.randn(window_size),
-    }[method]
-    x[idx] = replace_values
+    if method == "zero":
+        x[idx] = np.zeros(window_size)
+    elif method == "mean":
+        x[idx] = np.full(window_size, x[idx].mean())
+    elif method == "linear":
+        x[idx] = np.linspace(left_end, right_end, window_size)
+    elif method == "gaussian":
+        x[idx] = np.random.randn(window_size)
+    elif method == "gaussian_plus":
+        x[idx] = x[idx] + np.random.randn(window_size)
+
     x = x.reshape(-1)
     return x

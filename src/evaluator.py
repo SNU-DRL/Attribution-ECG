@@ -73,7 +73,7 @@ class Evaluator:
 
         return np.mean(pointing_game_results)
 
-    def get_degradation_score(self, attr_list, deg_method):
+    def get_degradation_score(self, attr_list, deg_method, window_size):
         y_list, lerf_probs_list, morf_probs_list = [], [], []
 
         for idx_batch, data_batch in enumerate(
@@ -86,7 +86,7 @@ class Evaluator:
             y = int(y.detach().cpu().squeeze().numpy())
 
             lerf_probs, morf_probs = degradation_score(
-                attr_x, y, x, self.model, self.device, deg_method
+                attr_x, y, x, self.model, self.device, deg_method, window_size
             )
 
             y_list.append(y)

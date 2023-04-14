@@ -45,7 +45,7 @@ def main(args):
     # evaluate feature attribution methods
     loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
     pnt_score = evaluator.get_pointing_game_score(attr_list)
-    deg_score = evaluator.get_degradation_score(attr_list, "linear")
+    deg_score = evaluator.get_degradation_score(attr_list, "linear", args.deg_window_size)
 
     # save results
     results = pd.Series({
@@ -85,6 +85,7 @@ if __name__ == "__main__":
         type=int,
         help="number of samples used for lime or shap",
     )
+    parser.add_argument("--deg_window_size", default=16, type=int)
 
     # Settings
     parser.add_argument("--gpu_num", default=None, type=str)
