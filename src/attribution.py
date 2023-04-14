@@ -12,7 +12,6 @@ def apply_attr_method(
     attr_method,
     input_tensor,
     n_samples=200,
-    feature_mask_window=16,
     absolute=False,
 ):
     ## Select target (predicted label)
@@ -22,17 +21,16 @@ def apply_attr_method(
 
     attribution_dict = {
         "saliency": Saliency,
-        "integrated_gradients": IntegratedGradients,
         "input_gradient": InputXGradient,
         "guided_backprop": GuidedBackprop,
+        "integrated_gradients": IntegratedGradients,
+        "deep_lift": DeepLift,
+        "deep_lift_shap": DeepLiftShap,
         "lrp": LRP,
         "lime": Lime,
         "kernel_shap": KernelShap,
-        "deep_lift": DeepLift,
-        "deep_lift_shap": DeepLiftShap,
         "gradcam": LayerGradCam,
         "guided_gradcam": GuidedGradCam,
-        "feature_ablation": FeatureAblation,
     }
 
     pred_label_idx.squeeze_()
@@ -54,23 +52,6 @@ def apply_attr_method(
             input_tensor,
             target=pred_label_idx,
             baselines=torch.randn([n_samples] + list(input_tensor.shape[1:])),
-        )
-    elif attr_method == "feature_ablation":
-        feature_mask = torch.cat(
-            (
-                torch.arange(
-                    input_tensor.shape[-1] // feature_mask_window
-                ).repeat_interleave(feature_mask_window),
-                torch.Tensor(
-                    [input_tensor.shape[-1] // feature_mask_window - 1]
-                    * (input_tensor.shape[-1] % feature_mask_window)
-                ),
-            ),
-            0,
-        ).int()
-        feature_mask = feature_mask.view(input_tensor.shape)
-        attr_x = attr_func.attribute(
-            input_tensor, target=pred_label_idx, feature_mask=feature_mask
         )
     else:
         attr_x = attr_func.attribute(input_tensor, target=pred_label_idx)

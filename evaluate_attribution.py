@@ -10,14 +10,14 @@ from src.setup import setup
 
 ATTRIBUTION_METHODS = [
     "saliency",
-    "integrated_gradients",
     "input_gradient",
     "guided_backporp",
+    "integrated_gradients",
+    "deep_lift",
+    "deep_lift_shap",
     "lrp",
     "lime",
     "kernel_shap",
-    "deep_lift",
-    "deep_lift_shap",
     "gradcam",
     "guided_gradcam",
     "random_baseline",
