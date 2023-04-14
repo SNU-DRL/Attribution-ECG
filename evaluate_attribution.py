@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import pandas as pd
 import torch
 
 from src.dataset import ECG_DataModule, get_attr_loader
@@ -38,10 +39,22 @@ def main(args):
     attr_loader = get_attr_loader(test_loader, model, args.prob_threshold, device)
     evaluator = Evaluator(model, attr_loader, device, args.result_dir)
 
+    # compute attribution
     attr_list = evaluator.compute_attribution(args.attr_method, args.absolute)
-    localization_score = evaluator.get_localization_score(attr_list) # These functions should return one scalar value
-    pointing_game_score = evaluator.get_pointing_game_score(attr_list) # These functions should save additional results(ex. plots) in the function
-    degradation_score = evaluator.get_degradation_score(attr_list, "linear")
+
+    # evaluate feature attribution methods
+    loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
+    pnt_score = evaluator.get_pointing_game_score(attr_list)
+    deg_score = evaluator.get_degradation_score(attr_list, "linear")
+
+    # save results
+    results = pd.Series({
+            "loc_score_mean": loc_score_mean,
+            "loc_score_std": loc_score_std,
+            "pnt_score": pnt_score,
+            "deg_score": deg_score,
+    })
+    results.to_csv(f"{args.result_dir}/result.csv", header=["value"])
 
 
 if __name__ == "__main__":
@@ -62,7 +75,9 @@ if __name__ == "__main__":
     )
 
     # Attribution method
-    parser.add_argument("--attr_method", default="gradcam", type=str)
+    parser.add_argument(
+        "--attr_method", default="gradcam", type=str, choices=ATTRIBUTION_METHODS
+    )
     parser.add_argument("--absolute", action="store_true")
     parser.add_argument(
         "--n_samples",

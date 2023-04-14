@@ -68,6 +68,10 @@ def get_attr_loader(dataloader, model, prob_threshold, device):
     """
     return dataloader for evaluating attribution methods (samples with correct prediction with high prob.)
     """
+
+    model.eval()
+    model.to(device)
+
     attr_x = []
     attr_y = []
     attr_y_raw = []

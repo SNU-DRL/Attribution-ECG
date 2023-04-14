@@ -40,7 +40,7 @@ def apply_attr_method(
 
     ## Load attribution function
     if "gradcam" in attr_method:
-        attr_func = attribution_dict[attr_method](model, model.layer4)
+        attr_func = attribution_dict[attr_method](model, model.backbone.layer4)
     else:
         attr_func = attribution_dict[attr_method](model)
 
@@ -114,6 +114,7 @@ def degradation_score(
     true_label,
     x,
     model,
+    device,
     method="mean",
     window_size=16,
 ):
@@ -124,7 +125,7 @@ def degradation_score(
     - linear: replace the erased part with the linear interpolation of each edge
     """
 
-    new_x, attr_x = np.copy(x[:-1]), attr_x[:-1]
+    new_x, attr_x = x[:-1], attr_x[:-1]
     attr_x_reshaped = attr_x.reshape(-1, window_size)
     score_per_window = attr_x_reshaped.sum(1)
     LeRF_rank = np.argsort(score_per_window)
@@ -136,18 +137,18 @@ def degradation_score(
     LeRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
     MoRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
 
-    new_x = np.copy(x[:-1])
+    degraded_x = np.copy(new_x)
     for window_idx in LeRF_rank:
-        new_x = degrade(new_x, window_idx, method=method)
-        LeRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
+        degraded_x = degrade(degraded_x, window_idx, method, window_size)
+        LeRF_x_list.append(torch.tensor(degraded_x).reshape(1, 1, 1, -1))
 
-    new_x = np.copy(x[:-1])
+    degraded_x = np.copy(new_x)
     for window_idx in MoRF_rank:
-        new_x = degrade(new_x, window_idx, method=method)
-        MoRF_x_list.append(torch.tensor(new_x).reshape(1, 1, 1, -1))
+        degraded_x = degrade(degraded_x, window_idx, method, window_size)
+        MoRF_x_list.append(torch.tensor(degraded_x).reshape(1, 1, 1, -1))
 
-    LeRF_x = torch.cat(LeRF_x_list, 0)
-    MoRF_x = torch.cat(MoRF_x_list, 0)
+    LeRF_x = torch.cat(LeRF_x_list, 0).to(device)
+    MoRF_x = torch.cat(MoRF_x_list, 0).to(device)
 
     with torch.no_grad():
         LeRF_prob = F.softmax(model(LeRF_x), dim=1)[:, true_label]
