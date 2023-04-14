@@ -90,17 +90,17 @@ class Evaluator:
             )
 
             y_list.append(y)
-            lerf_probs_list.append(lerf_probs) # 2820 list of 129 numpy array
+            lerf_probs_list.append(lerf_probs)
             morf_probs_list.append(morf_probs)
 
         LeRFs, MoRFs = np.array(lerf_probs_list), np.array(morf_probs_list)
-        
+
         LeRFs_normalized = (LeRFs - LeRFs[:,-1].mean()) / (LeRFs[:,0].mean() - LeRFs[:,-1].mean())
         MoRFs_normalized = (MoRFs - MoRFs[:,-1].mean()) / (MoRFs[:,0].mean() - MoRFs[:,-1].mean())
 
         LeRF = np.mean(LeRFs_normalized, axis=0)
         MoRF = np.mean(MoRFs_normalized, axis=0)
-        area = np.sum(LeRF - MoRF) / 128 # Set this value to param
+        area = np.sum(LeRF - MoRF) / (LeRF.shape[0] - 1)
 
         plt.figure(figsize=(7, 7))
         plt.title(
