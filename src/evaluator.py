@@ -90,40 +90,16 @@ class Evaluator:
             )
 
             y_list.append(y)
-            lerf_probs_list.append(lerf_probs)
+            lerf_probs_list.append(lerf_probs) # 2820 list of 129 numpy array
             morf_probs_list.append(morf_probs)
 
-        true_labels, LeRFs, MoRFs = (
-            np.array(y_list),
-            np.array(lerf_probs_list),
-            np.array(morf_probs_list),
-        )
+        LeRFs, MoRFs = np.array(lerf_probs_list), np.array(morf_probs_list)
+        
+        LeRFs_normalized = (LeRFs - LeRFs[:,-1].mean()) / (LeRFs[:,0].mean() - LeRFs[:,-1].mean())
+        MoRFs_normalized = (MoRFs - MoRFs[:,-1].mean()) / (MoRFs[:,0].mean() - MoRFs[:,-1].mean())
 
-        normalized_LeRFs = np.zeros_like(LeRFs)
-        normalized_MoRFs = np.zeros_like(MoRFs)
-        for l in np.unique(true_labels):
-            label_idx = np.arange(len(true_labels))[true_labels == l]
-
-            LeRF_to_normalize = LeRFs[label_idx]
-            MoRF_to_normalize = MoRFs[label_idx]
-
-            LeRF_init, LeRF_last = (
-                LeRF_to_normalize[:, 0].mean(),
-                LeRF_to_normalize[:, -1].mean(),
-            )
-            MoRF_init, MoRF_last = (
-                MoRF_to_normalize[:, 0].mean(),
-                MoRF_to_normalize[:, -1].mean(),
-            )
-
-            normalized_LeRF = (LeRF_to_normalize - LeRF_last) / (LeRF_init - LeRF_last)
-            normalized_MoRF = (MoRF_to_normalize - MoRF_last) / (MoRF_init - MoRF_last)
-
-            normalized_LeRFs[label_idx] = normalized_LeRF
-            normalized_MoRFs[label_idx] = normalized_MoRF
-
-        LeRF = np.mean(normalized_LeRFs, axis=0)
-        MoRF = np.mean(normalized_MoRFs, axis=0)
+        LeRF = np.mean(LeRFs_normalized, axis=0)
+        MoRF = np.mean(MoRFs_normalized, axis=0)
         area = np.sum(LeRF - MoRF) / 128 # Set this value to param
 
         plt.figure(figsize=(7, 7))
