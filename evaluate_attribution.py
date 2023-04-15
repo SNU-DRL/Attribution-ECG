@@ -1,10 +1,11 @@
 import argparse
+import json
 import os
 
 import pandas as pd
 import torch
 
-from src.dataset import ECG_DataModule, get_attr_data
+from src.dataset import ECG_DataModule, get_eval_attr_data
 from src.evaluator import Evaluator
 from src.setup import setup
 
@@ -35,9 +36,9 @@ def main(args):
     # model
     model = torch.load(args.model_path)
 
-    # initalize attribution evaluator
-    attr_data = get_attr_data(test_loader, model, args.prob_threshold, device)
-    evaluator = Evaluator(model, attr_data, device, args.result_dir)
+    # initalize evaluator for evaluating feature attribution methods
+    eval_attr_data = get_eval_attr_data(test_loader, model, args.prob_threshold, device)
+    evaluator = Evaluator(model, eval_attr_data, device, args.result_dir)
 
     # compute attribution
     attr_list = evaluator.compute_attribution(args.attr_method, args.absolute)
@@ -58,7 +59,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Attribution ECG")
+    parser = argparse.ArgumentParser(description="Evaluating feature attribution methods")
 
     # Dataset
     parser.add_argument(
@@ -74,7 +75,7 @@ if __name__ == "__main__":
         help="select samples with higher prediction prob.",
     )
 
-    # Attribution method
+    # Feature attribution method
     parser.add_argument(
         "--attr_method", default="gradcam", type=str, choices=ATTRIBUTION_METHODS
     )
@@ -83,18 +84,25 @@ if __name__ == "__main__":
         "--n_samples",
         default=200,
         type=int,
-        help="number of samples used for lime or shap",
+        help="number of samples used for lime / shap",
     )
-    parser.add_argument("--deg_window_size", default=16, type=int)
+
+    # Evaluation metrics for feature attribution methods
+    parser.add_argument("--deg_window_size", default=16, type=int, help="window size for degradation score")
 
     # Settings
-    parser.add_argument("--gpu_num", default=None, type=str)
+    parser.add_argument("--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)")
     parser.add_argument("--seed", default=0, type=int, help="random seed")
 
     # Result
     parser.add_argument("--result_dir", default="./result_eval", type=str)
 
     args = parser.parse_args()
+
+    # Save arguments
+    with open(os.path.join(args.result_dir, "args.json"), "w") as f:
+        json.dump(vars(args), f, indent=4)
+    print(json.dumps(vars(args), indent=4))
 
     os.makedirs(args.result_dir, exist_ok=True)
 

@@ -65,19 +65,21 @@ class ECG_Dataset(Dataset):
         return idx, x, y
 
 @torch.no_grad()
-def get_attr_data(dataloader, model, prob_threshold, device):
+def get_eval_attr_data(dataloader, model, prob_threshold, device):
     """
-    return dictionary of data for evaluating attribution methods (samples with correct prediction with high prob.)
+    returns dictionary of data for evaluating feature attribution methods.
+    (samples with correct prediction with high prob.)
     """
 
     model.eval()
     model.to(device)
 
-    attr_x = []
-    attr_y = []
-    attr_y_raw = []
-    attr_prob = []
+    x_list = []
+    y_list = []
+    y_raw_list = []
+    prob_list = []
 
+    print("Prepare dataset for evaluating feature attribution methods...")
     for idx_batch, data_batch in enumerate(pbar := tqdm(dataloader)):
         idx, x, y = data_batch
         x = x.to(device)
@@ -95,17 +97,17 @@ def get_attr_data(dataloader, model, prob_threshold, device):
             label = y[i]
             prob = probs[i]
             if label > 0 and prob[label] > prob_threshold:
-                attr_x.append(x[i])
-                attr_y.append(label)
-                attr_y_raw.append(dataloader.dataset.y_raw[idx[i]])
-                attr_prob.append(prob[label])
+                x_list.append(x[i])
+                y_list.append(label)
+                y_raw_list.append(dataloader.dataset.y_raw[idx[i]])
+                prob_list.append(prob[label])
 
     data_dict = {
-        "x": attr_x,
-        "y": attr_y,
-        "y_raw": attr_y_raw,
-        "prob": attr_prob,
-        "length": len(attr_prob)
+        "x": x_list,
+        "y": y_list,
+        "y_raw": y_raw_list,
+        "prob": prob_list,
+        "length": len(prob_list)
     }
 
     return data_dict

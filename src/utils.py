@@ -1,7 +1,7 @@
 import numpy as np
 
 
-ds_beat_names = {
+ICENTIA_BEAT_INDEX = {
     0: "undefined",  # Undefined
     1: "normal",  # Normal
     2: "pac",  # ESSV (PAC)
@@ -45,5 +45,5 @@ def flatten_raw_label(raw_label):
     raw_label_dict = {}
     for i, idx in enumerate(raw_label):
         for j in idx:
-            raw_label_dict[j] = ds_beat_names[i]
+            raw_label_dict[j] = ICENTIA_BEAT_INDEX[i]
     return raw_label_dict
