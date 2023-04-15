@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import torch
 
-from src.dataset import ECG_DataModule, get_attr_loader
+from src.dataset import ECG_DataModule, get_attr_data
 from src.evaluator import Evaluator
 from src.setup import setup
 
@@ -36,8 +36,8 @@ def main(args):
     model = torch.load(args.model_path)
 
     # initalize attribution evaluator
-    attr_loader = get_attr_loader(test_loader, model, args.prob_threshold, device)
-    evaluator = Evaluator(model, attr_loader, device, args.result_dir)
+    attr_data = get_attr_data(test_loader, model, args.prob_threshold, device)
+    evaluator = Evaluator(model, attr_data, device, args.result_dir)
 
     # compute attribution
     attr_list = evaluator.compute_attribution(args.attr_method, args.absolute)

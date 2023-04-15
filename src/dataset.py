@@ -64,9 +64,9 @@ class ECG_Dataset(Dataset):
         return idx, X, y
 
 @torch.no_grad()
-def get_attr_loader(dataloader, model, prob_threshold, device):
+def get_attr_data(dataloader, model, prob_threshold, device):
     """
-    return dataloader for evaluating attribution methods (samples with correct prediction with high prob.)
+    return dictionary of data for evaluating attribution methods (samples with correct prediction with high prob.)
     """
 
     model.eval()
@@ -99,7 +99,12 @@ def get_attr_loader(dataloader, model, prob_threshold, device):
                 attr_y_raw.append(dataloader.dataset.y_raw[idx[i]])
                 attr_prob.append(prob[label])
 
-    attr_dataset = ECG_Dataset(
-        np.array(attr_x), np.array(attr_y), attr_y_raw, attr_prob
-    )
-    return DataLoader(attr_dataset, pin_memory=True, batch_size=1, shuffle=False)
+    data_dict = {
+        "x": attr_x,
+        "y": attr_y,
+        "y_raw": attr_y_raw,
+        "prob": attr_prob,
+        "length": len(attr_prob)
+    }
+
+    return data_dict

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from tqdm import tqdm
 
 from src.attribution import (apply_attr_method, degradation_score,
@@ -8,11 +9,11 @@ from src.utils import get_boundaries_by_label
 
 
 class Evaluator:
-    def __init__(self, model, dataloader, device, result_dir):
+    def __init__(self, model, data_dict, device, result_dir):
         self.model = model
         self.device = device
         self.result_dir = result_dir
-        self.dataloader = dataloader
+        self.data_dict = data_dict
 
         self.model.eval()
         self.model.to(self.device)
@@ -20,11 +21,9 @@ class Evaluator:
     def compute_attribution(self, attr_method, absolute):
         print(f"Attribution method: {attr_method}, absolute: {absolute}")
         attr_list = []
-        for idx_batch, data_batch in enumerate(
-            pbar := tqdm(self.dataloader)
-        ):  # batch size set to 1
-            idx, x, y = data_batch
-            x = x.to(self.device)
+        for idx in tqdm(range(self.data_dict["length"])):
+            x = self.data_dict["x"][idx]
+            x = torch.as_tensor(x, device=self.device).unsqueeze(0)
             if attr_method == "random_baseline":
                 attr_x = np.random.randn(*x.shape)
             else:
@@ -39,15 +38,10 @@ class Evaluator:
 
     def get_localization_score(self, attr_list):
         score_list = []
-        for idx_batch, data_batch in enumerate(
-            pbar := tqdm(self.dataloader)
-        ):  # batch size set to 1
-            idx, x, y = data_batch
 
-            x = x.detach().cpu().squeeze().numpy()
-            attr_x = np.squeeze(attr_list[idx])
-            y = int(y.detach().cpu().squeeze().numpy())
-            y_raw = self.dataloader.dataset.y_raw[idx.item()]
+        for idx in tqdm(range(self.data_dict["length"])):
+            y, y_raw = self.data_dict["y"][idx], self.data_dict["y_raw"][idx]
+            attr_x = attr_list[idx].squeeze()
             boundaries_per_label = get_boundaries_by_label(y_raw)
 
             score = localization_score(attr_x, y, boundaries_per_label)
@@ -57,38 +51,28 @@ class Evaluator:
 
     def get_pointing_game_score(self, attr_list):
         pointing_game_results = []
-        for idx_batch, data_batch in enumerate(
-            pbar := tqdm(self.dataloader)
-        ):  # batch size set to 1
-            idx, x, y = data_batch
 
-            x = x.detach().cpu().squeeze().numpy()
-            attr_x = np.squeeze(attr_list[idx])
-            y = int(y.detach().cpu().squeeze().numpy())
-            y_raw = self.dataloader.dataset.y_raw[idx.item()]
+        for idx in tqdm(range(self.data_dict["length"])):
+            y, y_raw = self.data_dict["y"][idx], self.data_dict["y_raw"][idx]
+            attr_x = attr_list[idx].squeeze()
             boundaries_per_label = get_boundaries_by_label(y_raw)
 
             correct = pointing_game(attr_x, y, boundaries_per_label)
-            pointing_game_results.append(correct)
-
+            pointing_game_results.append(correct)                        
+        
         return np.mean(pointing_game_results)
 
     def get_degradation_score(self, attr_list, deg_method, window_size):
         y_list, lerf_probs_list, morf_probs_list = [], [], []
 
-        for idx_batch, data_batch in enumerate(
-            pbar := tqdm(self.dataloader)
-        ):  # batch size set to 1
-            idx, x, y = data_batch
-
-            x = x.detach().cpu().squeeze().numpy()
-            attr_x = np.squeeze(attr_list[idx])
-            y = int(y.detach().cpu().squeeze().numpy())
+        for idx in tqdm(range(self.data_dict["length"])):
+            x, y = self.data_dict["x"][idx].squeeze(), self.data_dict["y"][idx]
+            attr_x = attr_list[idx].squeeze()
 
             lerf_probs, morf_probs = degradation_score(
                 attr_x, y, x, self.model, self.device, deg_method, window_size
             )
-
+            
             y_list.append(y)
             lerf_probs_list.append(lerf_probs)
             morf_probs_list.append(morf_probs)
