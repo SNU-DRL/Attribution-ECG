@@ -42,7 +42,7 @@ def apply_attr_method(
     else:
         attr_func = attribution_dict[attr_method](model)
 
-    ## Conduct attribution method
+    ## Conduct attribution perturbation
     if attr_method in ["lime", "kernel_shap"]:
         attr_x = attr_func.attribute(
             input_tensor, target=pred_label_idx, n_samples=n_samples
@@ -67,10 +67,10 @@ def apply_attr_method(
     return attr_x
 
 
-def localization_score(attr_x, true_label, boundaries_per_label):
+def localization_score(attr_x, y, boundaries_per_label):
     N = 0
     true_idx = []
-    for boundary in boundaries_per_label[true_label]:
+    for boundary in boundaries_per_label[y]:
         N += boundary[1] - boundary[0]
         true_idx += list(np.arange(*boundary))
     attr_topN = np.argsort(attr_x)[-N:]
@@ -81,33 +81,34 @@ def localization_score(attr_x, true_label, boundaries_per_label):
     return iou
 
 
-def pointing_game(attr_x, true_label, boundaries_per_label):
+def pointing_game(attr_x, y, boundaries_per_label):
     attr_top1 = np.argmax(attr_x)
 
-    correct = False
-    for boundary in boundaries_per_label[true_label]:
-        correct = correct or (attr_top1 in range(*boundary))
-    return correct
+    is_correct = False
+    for boundary in boundaries_per_label[y]:
+        is_correct = is_correct or (attr_top1 in range(*boundary))
+    return is_correct
 
 
 def degradation_score(
     attr_x,
-    true_label,
+    y,
     x,
     model,
     device,
-    method="mean",
+    perturbation="mean",
     window_size=16,
 ):
     """
-    methods
-    - zero: replace the erased part with 0
-    - mean: replace the erased part with the mean of each edge
-    - linear: replace the erased part with the linear interpolation of each edge
+    perturbation
+    - zero: replace the window with 0
+    - mean: replace the window with the mean value of the window
+    - linear: replace the window with the linear interpolation of both edges
     """
     truncate_idx = len(x) % window_size
     x, attr_x = x[:-truncate_idx], attr_x[:-truncate_idx]
     attr_x = attr_x.reshape(-1, window_size)
+
     attr_window_score = attr_x.sum(1)
     LeRF_rank = np.argsort(attr_window_score)
     MoRF_rank = LeRF_rank[::-1]
@@ -120,25 +121,25 @@ def degradation_score(
 
     degraded_x = np.copy(x)
     for window_idx in LeRF_rank:
-        degraded_x = degrade(degraded_x, window_idx, method, window_size)
+        degraded_x = degrade(degraded_x, window_idx, perturbation, window_size)
         LeRF_x_list.append(torch.tensor(degraded_x).reshape(1, 1, 1, -1))
 
     degraded_x = np.copy(x)
     for window_idx in MoRF_rank:
-        degraded_x = degrade(degraded_x, window_idx, method, window_size)
+        degraded_x = degrade(degraded_x, window_idx, perturbation, window_size)
         MoRF_x_list.append(torch.tensor(degraded_x).reshape(1, 1, 1, -1))
 
     LeRF_x = torch.cat(LeRF_x_list, 0).to(device)
     MoRF_x = torch.cat(MoRF_x_list, 0).to(device)
 
     with torch.no_grad():
-        LeRF_prob = F.softmax(model(LeRF_x), dim=1)[:, true_label]
-        MoRF_prob = F.softmax(model(MoRF_x), dim=1)[:, true_label]
+        LeRF_prob = F.softmax(model(LeRF_x), dim=1)[:, y]
+        MoRF_prob = F.softmax(model(MoRF_x), dim=1)[:, y]
 
     return LeRF_prob.tolist(), MoRF_prob.tolist()
 
 
-def degrade(x, idx, method, window_size):
+def degrade(x, idx, perturbation, window_size):
     x = x.reshape(-1, window_size)
     if idx == 0:
         left_end = x[idx][0]
@@ -150,15 +151,15 @@ def degrade(x, idx, method, window_size):
         left_end = x[idx - 1][-1]
         right_end = x[idx + 1][0]
 
-    if method == "zero":
+    if perturbation == "zero":
         x[idx] = np.zeros(window_size)
-    elif method == "mean":
+    elif perturbation == "mean":
         x[idx] = np.full(window_size, x[idx].mean())
-    elif method == "linear":
+    elif perturbation == "linear":
         x[idx] = np.linspace(left_end, right_end, window_size)
-    elif method == "gaussian":
+    elif perturbation == "gaussian":
         x[idx] = np.random.randn(window_size)
-    elif method == "gaussian_plus":
+    elif perturbation == "gaussian_plus":
         x[idx] = x[idx] + np.random.randn(window_size)
 
     x = x.reshape(-1)

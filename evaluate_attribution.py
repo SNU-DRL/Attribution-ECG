@@ -40,19 +40,19 @@ def main(args):
     eval_attr_data = get_eval_attr_data(test_loader, model, args.prob_threshold, device)
     evaluator = Evaluator(model, eval_attr_data, device, args.result_dir)
 
-    # compute attribution
+    # compute feature attribution
     attr_list = evaluator.compute_attribution(args.attr_method, args.absolute)
 
     # evaluate feature attribution methods
     loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
-    pnt_score = evaluator.get_pointing_game_score(attr_list)
+    pnt_accuracy = evaluator.get_pointing_game_accuracy(attr_list)
     deg_score = evaluator.get_degradation_score(attr_list, "mean", args.deg_window_size)
 
     # save results
     results = pd.Series({
             "loc_score_mean": loc_score_mean,
             "loc_score_std": loc_score_std,
-            "pnt_score": pnt_score,
+            "pnt_accuracy": pnt_accuracy,
             "deg_score": deg_score,
     })
     results.to_csv(f"{args.result_dir}/result.csv", header=["value"])
