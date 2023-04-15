@@ -38,7 +38,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Attribution ECG")
+    parser = argparse.ArgumentParser(description="Training an ECG classification model")
 
     # Dataset
     parser.add_argument(
@@ -55,7 +55,9 @@ if __name__ == "__main__":
     parser.add_argument("--weight_decay", default=1e-4, type=float)
 
     # Settings
-    parser.add_argument("--gpu_num", default=None, type=str)
+    parser.add_argument(
+        "--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)"
+    )
     parser.add_argument("--seed", default=0, type=int, help="random seed")
 
     # Result
