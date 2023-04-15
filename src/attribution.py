@@ -1,66 +1,57 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-from captum.attr import (LRP, DeepLift, DeepLiftShap, FeatureAblation,
-                         GuidedBackprop, GuidedGradCam, InputXGradient,
-                         IntegratedGradients, KernelShap, LayerAttribution,
-                         LayerGradCam, Lime, Saliency)
+from captum.attr import (LRP, DeepLift, DeepLiftShap, GuidedBackprop,
+                         GuidedGradCam, InputXGradient, IntegratedGradients,
+                         KernelShap, LayerAttribution, LayerGradCam, Lime,
+                         Saliency)
+
+ATTRIBUTION_METHODS = {
+    "saliency": Saliency,
+    "input_gradient": InputXGradient,
+    "guided_backprop": GuidedBackprop,
+    "integrated_gradients": IntegratedGradients,
+    "deep_lift": DeepLift,
+    "deep_shap": DeepLiftShap,
+    "lrp": LRP,
+    "lime": Lime,
+    "kernel_shap": KernelShap,
+    "gradcam": LayerGradCam,
+    "guided_gradcam": GuidedGradCam,
+}
 
 
 def apply_attr_method(
     model,
+    x,
+    y,
     attr_method,
-    input_tensor,
-    n_samples=200,
     absolute=False,
+    n_samples=200,
 ):
-    ## Select target (predicted label)
-    yhat = model(input_tensor)
-    softmax_yhat = F.softmax(yhat, dim=1)
-    prediction_score, pred_label_idx = torch.topk(softmax_yhat, 1)
-
-    attribution_dict = {
-        "saliency": Saliency,
-        "input_gradient": InputXGradient,
-        "guided_backprop": GuidedBackprop,
-        "integrated_gradients": IntegratedGradients,
-        "deep_lift": DeepLift,
-        "deep_lift_shap": DeepLiftShap,
-        "lrp": LRP,
-        "lime": Lime,
-        "kernel_shap": KernelShap,
-        "gradcam": LayerGradCam,
-        "guided_gradcam": GuidedGradCam,
-    }
-
-    pred_label_idx.squeeze_()
-    # print("pred_label_idx.shape", pred_label_idx.shape)
-
-    ## Load attribution function
+    # Load attribution function
     if "gradcam" in attr_method:
-        attr_func = attribution_dict[attr_method](model, model.backbone.layer4)
+        attr_func = ATTRIBUTION_METHODS[attr_method](model, model.backbone.layer4)
     else:
-        attr_func = attribution_dict[attr_method](model)
+        attr_func = ATTRIBUTION_METHODS[attr_method](model)
 
-    ## Conduct attribution perturbation
+    # Calaulate feature attribution
     if attr_method in ["lime", "kernel_shap"]:
+        attr_x = attr_func.attribute(x, target=y, n_samples=n_samples)
+    elif attr_method == "deep_shap":
         attr_x = attr_func.attribute(
-            input_tensor, target=pred_label_idx, n_samples=n_samples
-        )
-    elif attr_method == "deep_lift_shap":
-        attr_x = attr_func.attribute(
-            input_tensor,
-            target=pred_label_idx,
-            baselines=torch.randn([n_samples] + list(input_tensor.shape[1:])),
+            x,
+            target=y,
+            baselines=torch.randn([n_samples] + list(x.shape[1:])),
         )
     else:
-        attr_x = attr_func.attribute(input_tensor, target=pred_label_idx)
+        attr_x = attr_func.attribute(x, target=y)
 
-    ## Interpolation for GradCAM
+    # Interpolation for GradCAM
     if attr_method == "gradcam":
-        attr_x = LayerAttribution.interpolate(attr_x, (1, input_tensor.shape[-1]))
+        attr_x = LayerAttribution.interpolate(attr_x, (1, x.shape[-1]))
 
-    ## Absolute values of attribution
+    # Use absolute values of attribution
     if absolute:
         attr_x = torch.abs(attr_x)
 
@@ -91,10 +82,10 @@ def pointing_game(attr_x, y, boundaries_per_label):
 
 
 def degradation_score(
+    model,
+    x,
     attr_x,
     y,
-    x,
-    model,
     device,
     perturbation="mean",
     window_size=16,
@@ -102,8 +93,10 @@ def degradation_score(
     """
     perturbation
     - zero: replace the window with 0
-    - mean: replace the window with the mean value of the window
+    - mean: fill the window with the mean value of the window
     - linear: replace the window with the linear interpolation of both edges
+    - gaussian: replace the window with Gaussian noise
+    - gaussian_pluse: add a Gaussian noise to the window
     """
     truncate_idx = len(x) % window_size
     x, attr_x = x[:-truncate_idx], attr_x[:-truncate_idx]

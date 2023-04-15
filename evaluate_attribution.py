@@ -8,21 +8,7 @@ import torch
 from src.dataset import ECG_DataModule, get_eval_attr_data
 from src.evaluator import Evaluator
 from src.setup import setup
-
-ATTRIBUTION_METHODS = [
-    "saliency",
-    "input_gradient",
-    "guided_backporp",
-    "integrated_gradients",
-    "deep_lift",
-    "deep_lift_shap",
-    "lrp",
-    "lime",
-    "kernel_shap",
-    "gradcam",
-    "guided_gradcam",
-    "random_baseline",
-]
+from src.attribution import ATTRIBUTION_METHODS
 
 
 def main(args):
@@ -77,7 +63,7 @@ if __name__ == "__main__":
 
     # Feature attribution method
     parser.add_argument(
-        "--attr_method", default="gradcam", type=str, choices=ATTRIBUTION_METHODS
+        "--attr_method", default="gradcam", type=str, choices=ATTRIBUTION_METHODS.keys()
     )
     parser.add_argument("--absolute", action="store_true")
     parser.add_argument(

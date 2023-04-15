@@ -30,13 +30,13 @@ class Evaluator:
 
         attr_list = []
         for idx in tqdm(range(self.data_dict["length"])):
-            x = self.data_dict["x"][idx]
+            x, y = self.data_dict["x"][idx], int(self.data_dict["y"][idx])
             x = torch.as_tensor(x, device=self.device).unsqueeze(0)
             if attr_method == "random_baseline":
                 attr_x = np.random.randn(*x.shape)
             else:
                 attr_x = apply_attr_method(
-                    self.model, attr_method, x, absolute=absolute
+                    self.model, x, y, attr_method, absolute=absolute
                 )
                 attr_x = attr_x.detach().cpu().numpy()
 
@@ -48,7 +48,7 @@ class Evaluator:
         loc_score_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
-            y, y_raw = self.data_dict["y"][idx], self.data_dict["y_raw"][idx]
+            y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
             attr_x = attr_list[idx].squeeze()
             boundaries_per_label = get_boundaries_by_label(y_raw)
 
@@ -61,7 +61,7 @@ class Evaluator:
         pnt_result_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
-            y, y_raw = self.data_dict["y"][idx], self.data_dict["y_raw"][idx]
+            y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
             attr_x = attr_list[idx].squeeze()
             boundaries_per_label = get_boundaries_by_label(y_raw)
 
@@ -74,11 +74,11 @@ class Evaluator:
         y_list, LeRF_probs, MoRF_probs = [], [], []
 
         for idx in tqdm(range(self.data_dict["length"])):
-            x, y = self.data_dict["x"][idx].squeeze(), self.data_dict["y"][idx]
+            x, y = self.data_dict["x"][idx].squeeze(), int(self.data_dict["y"][idx])
             attr_x = attr_list[idx].squeeze()
 
             LeRF_prob, MoRF_prob = degradation_score(
-                attr_x, y, x, self.model, self.device, perturbation, window_size
+                self.model, x, attr_x, y, self.device, perturbation, window_size
             )
 
             y_list.append(y)

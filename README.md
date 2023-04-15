@@ -36,3 +36,4 @@ You will get a trained model in the directory specified in `--results_path` argu
 ```
 You need to pass the path of a trained model with `--model_path` argument.
 You will get result files(`attr_eval_all.json`) in the directory specified in `--results_path`.
+- Avaliable attribution methods:, "saliency", "input_gradient", "guided_backprop", "integrated_gradients", "deep_lift", "deep_shap", "lrp", "lime", "kernel_shap", "gradcam", "guided_gradcam"
