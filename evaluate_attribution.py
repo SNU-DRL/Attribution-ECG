@@ -5,10 +5,10 @@ import os
 import pandas as pd
 import torch
 
+from src.attribution import ATTRIBUTION_METHODS
 from src.dataset import ECG_DataModule, get_eval_attr_data
 from src.evaluator import Evaluator
 from src.setup import setup
-from src.attribution import ATTRIBUTION_METHODS
 
 
 def main(args):
@@ -35,17 +35,21 @@ def main(args):
     deg_score = evaluator.get_degradation_score(attr_list, "mean", args.deg_window_size)
 
     # save results
-    results = pd.Series({
+    results = pd.Series(
+        {
             "loc_score_mean": loc_score_mean,
             "loc_score_std": loc_score_std,
             "pnt_accuracy": pnt_accuracy,
             "deg_score": deg_score,
-    })
+        }
+    )
     results.to_csv(f"{args.result_dir}/result.csv", header=["value"])
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Evaluating feature attribution methods")
+    parser = argparse.ArgumentParser(
+        description="Evaluating feature attribution methods"
+    )
 
     # Dataset
     parser.add_argument(
@@ -74,10 +78,17 @@ if __name__ == "__main__":
     )
 
     # Evaluation metrics for feature attribution methods
-    parser.add_argument("--deg_window_size", default=16, type=int, help="window size for degradation score")
+    parser.add_argument(
+        "--deg_window_size",
+        default=16,
+        type=int,
+        help="window size for degradation score",
+    )
 
     # Settings
-    parser.add_argument("--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)")
+    parser.add_argument(
+        "--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)"
+    )
     parser.add_argument("--seed", default=0, type=int, help="random seed")
 
     # Result

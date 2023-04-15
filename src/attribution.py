@@ -58,12 +58,12 @@ def apply_attr_method(
     return attr_x
 
 
-def localization_score(attr_x, y, boundaries_per_label):
+def localization_score(attr_x, y, beat_spans):
     N = 0
     true_idx = []
-    for boundary in boundaries_per_label[y]:
-        N += boundary[1] - boundary[0]
-        true_idx += list(np.arange(*boundary))
+    for span in beat_spans[y]:
+        N += span[1] - span[0]
+        true_idx += list(np.arange(*span))
     attr_topN = np.argsort(attr_x)[-N:]
     true_idx = set(true_idx)
     pred_idx = set(attr_topN)
@@ -72,12 +72,11 @@ def localization_score(attr_x, y, boundaries_per_label):
     return iou
 
 
-def pointing_game(attr_x, y, boundaries_per_label):
+def pointing_game(attr_x, y, beat_spans):
     attr_top1 = np.argmax(attr_x)
-
     is_correct = False
-    for boundary in boundaries_per_label[y]:
-        is_correct = is_correct or (attr_top1 in range(*boundary))
+    for span in beat_spans[y]:
+        is_correct = is_correct or (attr_top1 in range(*span))
     return is_correct
 
 

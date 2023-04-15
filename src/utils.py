@@ -9,41 +9,43 @@ ICENTIA_BEAT_INDEX = {
     4: "pvc",  # ESV (PVC)
 }
 
+ICENTIA_LABEL_MAPPING = {
+    "normal": 0,
+    "pac": 1,
+    "pvc": 2,
+}
 
 def preprocess(data):
     """
     Standardization
-    data.shape: (# samples, 1(lead), frame_size), numpy
+    data.shape: (# samples, 1(lead), frame_size)
     """
     m = np.expand_dims(data.mean(-1), -1)
     s = np.expand_dims(data.std(-1), -1)
     return (data - m) / (s + 1e-6)
 
 
-def get_boundaries_by_label(raw_label):
-    flat_raw_label = flatten_raw_label(raw_label)
-    flat_raw_label = dict(sorted(flat_raw_label.items()))
+def get_beat_spans(y_raw, len_x=2049):
+    beats = extract_beats(y_raw)
+    beats = dict(sorted(beats.items()))
 
-    r_peaks = np.array(list(flat_raw_label.keys()))
+    r_peaks = np.array(list(beats.keys()))
     beat_boundaries = (r_peaks[1:] + r_peaks[:-1]) // 2
-    beat_boundaries = np.insert(beat_boundaries, 0, 0)
-    beat_boundaries = np.append(beat_boundaries, 2048)
-    beat_boundary_per_beat = [
-        (s, e) for s, e in zip(beat_boundaries[:-1], beat_boundaries[1:])
-    ]
-    beat_boundaries_per_label_dict = {0: [], 1: [], 2: []}
+    beat_onsets = np.insert(beat_boundaries, 0, 0) # inclusive
+    beat_offsets = np.append(beat_boundaries, len_x) # exclusive
+    beat_spans = {0: [], 1: [], 2: []}
 
-    for l, b in zip(flat_raw_label.values(), beat_boundary_per_beat):
-        if l not in ["normal", "pac", "pvc"]:
+    for beat, onset, offset in zip(beats.values(), beat_onsets, beat_offsets):
+        if beat not in ["normal", "pac", "pvc"]:
             continue
-        beat_boundaries_per_label_dict[{"normal": 0, "pac": 1, "pvc": 2}[l]].append(b)
+        beat_spans[ICENTIA_LABEL_MAPPING[beat]].append((onset, offset)) # span: [onset, offset-1]
 
-    return beat_boundaries_per_label_dict
+    return beat_spans
 
 
-def flatten_raw_label(raw_label):
-    raw_label_dict = {}
-    for i, idx in enumerate(raw_label):
-        for j in idx:
-            raw_label_dict[j] = ICENTIA_BEAT_INDEX[i]
-    return raw_label_dict
+def extract_beats(y_raw):
+    label_dict = {}
+    for i, indices in enumerate(y_raw):
+        for j in indices:
+            label_dict[j] = ICENTIA_BEAT_INDEX[i]
+    return label_dict

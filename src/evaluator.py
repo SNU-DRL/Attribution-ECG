@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from src.attribution import (apply_attr_method, degradation_score,
                              localization_score, pointing_game)
-from src.utils import get_boundaries_by_label
+from src.utils import get_beat_spans
 
 
 class Evaluator:
@@ -26,7 +26,9 @@ class Evaluator:
             attr_method (str): attribution method
             absolute (bool): use absolute value (default=False)
         """
-        print(f"Calculating feature attribution - attribution method: {attr_method}, absolute: {absolute}")
+        print(
+            f"Calculating feature attribution - attribution method: {attr_method}, absolute: {absolute}"
+        )
 
         attr_list = []
         for idx in tqdm(range(self.data_dict["length"])):
@@ -50,9 +52,9 @@ class Evaluator:
         for idx in tqdm(range(self.data_dict["length"])):
             y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
             attr_x = attr_list[idx].squeeze()
-            boundaries_per_label = get_boundaries_by_label(y_raw)
+            beat_spans = get_beat_spans(y_raw, len(attr_x))
 
-            loc_score = localization_score(attr_x, y, boundaries_per_label)
+            loc_score = localization_score(attr_x, y, beat_spans)
             loc_score_list.append(loc_score)
 
         return np.mean(loc_score_list), np.std(loc_score_list)
@@ -63,9 +65,9 @@ class Evaluator:
         for idx in tqdm(range(self.data_dict["length"])):
             y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
             attr_x = attr_list[idx].squeeze()
-            boundaries_per_label = get_boundaries_by_label(y_raw)
+            beat_spans = get_beat_spans(y_raw, len(attr_x))
 
-            is_correct = pointing_game(attr_x, y, boundaries_per_label)
+            is_correct = pointing_game(attr_x, y, beat_spans)
             pnt_result_list.append(is_correct)
 
         return np.mean(pnt_result_list)
