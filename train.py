@@ -64,12 +64,11 @@ if __name__ == "__main__":
     parser.add_argument("--result_dir", default="./result", type=str)
 
     args = parser.parse_args()
+    os.makedirs(args.result_dir, exist_ok=True)
 
     # Save arguments
     with open(os.path.join(args.result_dir, "args.json"), "w") as f:
         json.dump(vars(args), f, indent=4)
     print(json.dumps(vars(args), indent=4))
-
-    os.makedirs(args.result_dir, exist_ok=True)
 
     main(args)
