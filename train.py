@@ -65,9 +65,9 @@ if __name__ == "__main__":
 
     # Save arguments
     with open(os.path.join(args.result_dir, "args.json"), "w") as f:
-        json.dump(vars(args), f, indent=4)    
+        json.dump(vars(args), f, indent=4)
     print(json.dumps(vars(args), indent=4))
-    
+
     os.makedirs(args.result_dir, exist_ok=True)
 
     main(args)

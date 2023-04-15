@@ -12,7 +12,13 @@ Original source: [Icentia11k: An Unsupervised ECG Representation Learning Datase
 
 ## How to use
 ### Requirements
-- PyTorch==1.8.1
+Tested on
+- Python 3.10.10
+- PyTorch 2.0.0
+```
+    conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+```
+- Other packages
 ```
     pip install -r requirements.txt
 ```
