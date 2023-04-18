@@ -47,6 +47,7 @@ class Evaluator:
         return attr_list
 
     def get_localization_score(self, attr_list):
+        print("Calculating localization score...")
         loc_score_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
@@ -60,6 +61,7 @@ class Evaluator:
         return np.mean(loc_score_list), np.std(loc_score_list)
 
     def get_pointing_game_accuracy(self, attr_list):
+        print("Calculating pointing game accuracy...")
         pnt_result_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
@@ -73,6 +75,7 @@ class Evaluator:
         return np.mean(pnt_result_list)
 
     def get_degradation_score(self, attr_list, perturbation, window_size):
+        print("Calculating degradation score...")
         y_list, LeRF_probs, MoRF_probs = [], [], []
 
         for idx in tqdm(range(self.data_dict["length"])):

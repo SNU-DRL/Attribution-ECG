@@ -7,6 +7,7 @@ from captum.attr import (LRP, DeepLift, DeepLiftShap, GuidedBackprop,
                          Saliency)
 
 ATTRIBUTION_METHODS = {
+    "random_baseline": None,
     "saliency": Saliency,
     "input_gradient": InputXGradient,
     "guided_backprop": GuidedBackprop,
