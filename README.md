@@ -12,7 +12,13 @@ Original source: [Icentia11k: An Unsupervised ECG Representation Learning Datase
 
 ## How to use
 ### Requirements
-- PyTorch==1.8.1
+Tested on
+- Python 3.10.10
+- PyTorch 2.0.0
+```
+    conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+```
+- Other packages
 ```
     pip install -r requirements.txt
 ```
@@ -30,3 +36,4 @@ You will get a trained model in the directory specified in `--results_path` argu
 ```
 You need to pass the path of a trained model with `--model_path` argument.
 You will get result files(`attr_eval_all.json`) in the directory specified in `--results_path`.
+- Avaliable attribution methods:, "saliency", "input_gradient", "guided_backprop", "integrated_gradients", "deep_lift", "deep_shap", "lrp", "lime", "kernel_shap", "gradcam", "guided_gradcam"
