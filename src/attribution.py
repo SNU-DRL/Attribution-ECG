@@ -43,7 +43,7 @@ def apply_attr_method(
         attr_x = attr_func.attribute(
             x,
             target=y,
-            baselines=torch.randn([n_samples] + list(x.shape[1:])),
+            baselines=torch.randn([n_samples] + list(x.shape[1:]), device=x.device),
         )
     else:
         attr_x = attr_func.attribute(x, target=y)
