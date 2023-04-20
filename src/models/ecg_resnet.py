@@ -3,6 +3,7 @@
 
 from typing import Any, Callable, List, Optional, Type, Union
 
+import torch
 import torch.nn as nn
 from torch import Tensor
 
@@ -228,7 +229,6 @@ class ResNet(nn.Module):
             dilate=replace_stride_with_dilation[2],
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.flatten = nn.Flatten()
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -311,7 +311,7 @@ class ResNet(nn.Module):
         x = self.layer4(x)
 
         x = self.avgpool(x)
-        reps = self.flatten(x)
+        reps = torch.flatten(x, 1)
 
         return reps
 
