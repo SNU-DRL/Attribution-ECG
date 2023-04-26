@@ -31,6 +31,9 @@ def main(args):
         args.attr_method, args.absolute, args.n_samples
     )
 
+    if args.visualize:
+        evaluator.visualize(attr_list)
+
     # evaluate feature attribution methods
     loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
     pnt_accuracy = evaluator.get_pointing_game_accuracy(attr_list)
@@ -88,6 +91,7 @@ if __name__ == "__main__":
     )
 
     # Settings
+    parser.add_argument("--visualize", action="store_true")
     parser.add_argument(
         "--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)"
     )

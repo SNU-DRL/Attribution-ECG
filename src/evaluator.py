@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -5,7 +7,7 @@ from tqdm import tqdm
 
 from src.attribution import (Attribution, degradation_score,
                              localization_score, pointing_game)
-from src.utils import get_beat_spans
+from src.utils import get_beat_spans, plot_attribution
 
 
 class Evaluator:
@@ -40,6 +42,15 @@ class Evaluator:
             attr_list.append(attr_x)
 
         return attr_list
+
+    def visualize(self, attr_list):
+        vis_dir = f"{self.result_dir}/vis"
+        os.makedirs(vis_dir, exist_ok=True)
+        for idx in tqdm(range(self.data_dict["length"])):
+            x, y, y_raw, prob = self.data_dict["x"][idx], int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx], self.data_dict["prob"][idx]
+            attr_x = attr_list[idx]
+            vis_path = f"{vis_dir}/label{y}_prob{prob:.6f}_id{idx}.png"
+            plot_attribution(x, y, y_raw, prob, attr_x, vis_path)
 
     def get_localization_score(self, attr_list):
         print("Calculating localization score...")

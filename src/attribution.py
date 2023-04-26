@@ -32,7 +32,7 @@ class Attribution:
         self.attr_method = attr_method
         if attr_method == "random_baseline":
             self.attr_func = None
-        elif attr_method == "gradcam":
+        elif "gradcam" in attr_method:
             self.attr_func = ATTRIBUTION_METHODS[attr_method](
                 model, model.backbone.layer4
             )
