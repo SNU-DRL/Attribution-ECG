@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 ICENTIA_BEAT_INDEX = {
     0: "undefined",  # Undefined
@@ -15,9 +15,8 @@ ICENTIA_LABEL_MAPPING = {
     "pvc": 2,
 }
 
-ICENTIA_LABEL_MAPPING_REVERSE = {
-    y:x for x,y in ICENTIA_LABEL_MAPPING.items()
-}
+ICENTIA_LABEL_MAPPING_REVERSE = {y: x for x, y in ICENTIA_LABEL_MAPPING.items()}
+
 
 def preprocess(data):
     """
@@ -35,14 +34,16 @@ def get_beat_spans(y_raw, len_x=2049):
 
     r_peaks = np.array(list(beats.keys()))
     beat_boundaries = (r_peaks[1:] + r_peaks[:-1]) // 2
-    beat_onsets = np.insert(beat_boundaries, 0, 0) # inclusive
-    beat_offsets = np.append(beat_boundaries, len_x) # exclusive
+    beat_onsets = np.insert(beat_boundaries, 0, 0)  # inclusive
+    beat_offsets = np.append(beat_boundaries, len_x)  # exclusive
     beat_spans = {0: [], 1: [], 2: []}
 
     for beat, onset, offset in zip(beats.values(), beat_onsets, beat_offsets):
         if beat not in ["normal", "pac", "pvc"]:
             continue
-        beat_spans[ICENTIA_LABEL_MAPPING[beat]].append((onset, offset)) # span: [onset, offset-1]
+        beat_spans[ICENTIA_LABEL_MAPPING[beat]].append(
+            (onset, offset)
+        )  # span: [onset, offset-1]
 
     return beat_spans
 
@@ -54,13 +55,15 @@ def extract_beats(y_raw):
             label_dict[j] = ICENTIA_BEAT_INDEX[i]
     return label_dict
 
-ATTR_FIGSIZE=(25, 10)
-YLIM=(-15, 15)
-ECG_COLOR='darkblue'
-ECG_LW=2
-ATTR_COLOR='darkgreen'
-ATTR_ALPHA=0.5
-ATTR_LW=2
+
+ATTR_FIGSIZE = (25, 10)
+YLIM = (-15, 15)
+ECG_COLOR = "darkblue"
+ECG_LW = 2
+ATTR_COLOR = "darkgreen"
+ATTR_ALPHA = 0.5
+ATTR_LW = 2
+
 
 def plot_attribution(x, y, y_raw, prob, attr_x, path):
     beat_spans = get_beat_spans(y_raw)
@@ -70,12 +73,18 @@ def plot_attribution(x, y, y_raw, prob, attr_x, path):
     # ECG
     ax1.set_ylim(*YLIM)
     ax1.plot(x.squeeze(), c=ECG_COLOR, linewidth=ECG_LW)
-    ax1.set_ylabel('ECG signal', color=ECG_COLOR)
-    
+    ax1.set_ylabel("ECG signal", color=ECG_COLOR)
+
     for class_idx, class_span in beat_spans.items():
         for span in class_span:
-            ax1.axvline(span[0], alpha=0.5, c='grey', linestyle="--")
-            ax1.text(np.mean(span), -18, ICENTIA_LABEL_MAPPING_REVERSE[class_idx], fontsize=15, horizontalalignment='center')
+            ax1.axvline(span[0], alpha=0.5, c="grey", linestyle="--")
+            ax1.text(
+                np.mean(span),
+                -18,
+                ICENTIA_LABEL_MAPPING_REVERSE[class_idx],
+                fontsize=15,
+                horizontalalignment="center",
+            )
 
     label = ICENTIA_LABEL_MAPPING_REVERSE[y]
     plt.title(f"Label: {label}, Prob: {prob:.6f}")
