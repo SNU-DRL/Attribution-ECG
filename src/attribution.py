@@ -22,41 +22,51 @@ ATTRIBUTION_METHODS = {
 }
 
 
-def apply_attr_method(
-    model,
-    x,
-    y,
-    attr_method,
-    absolute=False,
-    n_samples=200,
-):
-    # Load attribution function
-    if "gradcam" in attr_method:
-        attr_func = ATTRIBUTION_METHODS[attr_method](model, model.backbone.layer4)
-    else:
-        attr_func = ATTRIBUTION_METHODS[attr_method](model)
+class Attribution:
+    """
+    Apply feature attribution method to a sample (x, y)
+    """
 
-    # Calaulate feature attribution
-    if attr_method in ["lime", "kernel_shap"]:
-        attr_x = attr_func.attribute(x, target=y, n_samples=n_samples)
-    elif attr_method == "deep_shap":
-        attr_x = attr_func.attribute(
-            x,
-            target=y,
-            baselines=torch.randn([n_samples] + list(x.shape[1:]), device=x.device),
-        )
-    else:
-        attr_x = attr_func.attribute(x, target=y)
+    def __init__(self, model, attr_method, absolute=False, n_samples=200):
+        self.model = model
+        self.attr_method = attr_method
+        if attr_method == "random_baseline":
+            self.attr_func = None
+        elif "gradcam" in attr_method:
+            self.attr_func = ATTRIBUTION_METHODS[attr_method](
+                model, model.backbone.layer4
+            )
+        else:
+            self.attr_func = ATTRIBUTION_METHODS[attr_method](model)
+        self.absolute = absolute
+        self.n_samples = n_samples
 
-    # Interpolation for GradCAM
-    if attr_method == "gradcam":
-        attr_x = LayerAttribution.interpolate(attr_x, (1, x.shape[-1]))
+    def apply(self, x, y) -> np.ndarray:
+        if self.attr_method == "random_baseline":
+            attr_x = np.random.randn(*x.shape)
+            return attr_x
+        elif self.attr_method in ["lime", "kernel_shap"]:
+            attr_x = self.attr_func.attribute(x, target=y, n_samples=self.n_samples)
+        elif self.attr_method == "deep_shap":
+            attr_x = self.attr_func.attribute(
+                x,
+                target=y,
+                baselines=torch.randn(
+                    [self.n_samples] + list(x.shape[1:]), device=x.device
+                ),
+            )
+        else:
+            attr_x = self.attr_func.attribute(x, target=y)
 
-    # Use absolute values of attribution
-    if absolute:
-        attr_x = torch.abs(attr_x)
+        # Interpolation for GradCAM
+        if self.attr_method == "gradcam":
+            attr_x = LayerAttribution.interpolate(attr_x, (1, x.shape[-1]))
 
-    return attr_x
+        # Use absolute values of attribution
+        if self.absolute:
+            attr_x = torch.abs(attr_x)
+
+        return attr_x.detach().cpu().numpy()
 
 
 def localization_score(attr_x, y, beat_spans):

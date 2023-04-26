@@ -27,7 +27,12 @@ def main(args):
     evaluator = Evaluator(model, eval_attr_data, device, args.result_dir)
 
     # compute feature attribution
-    attr_list = evaluator.compute_attribution(args.attr_method, args.absolute)
+    attr_list = evaluator.compute_attribution(
+        args.attr_method, args.absolute, args.n_samples
+    )
+
+    if args.visualize:
+        evaluator.visualize(attr_list)
 
     # evaluate feature attribution methods
     loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
@@ -86,6 +91,7 @@ if __name__ == "__main__":
     )
 
     # Settings
+    parser.add_argument("--visualize", action="store_true")
     parser.add_argument(
         "--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)"
     )
