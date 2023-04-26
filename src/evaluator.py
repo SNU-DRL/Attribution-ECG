@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from src.attribution import (apply_attr_method, degradation_score,
+from src.attribution import (Attribution, degradation_score,
                              localization_score, pointing_game)
 from src.utils import get_beat_spans
 
@@ -18,7 +18,7 @@ class Evaluator:
         self.model.eval()
         self.model.to(self.device)
 
-    def compute_attribution(self, attr_method, absolute=False):
+    def compute_attribution(self, attr_method, absolute=False, n_samples=200):
         """
         Compute feature attribution of each data by using given attribution method
 
@@ -30,18 +30,13 @@ class Evaluator:
             f"Calculating feature attribution - attribution method: {attr_method}, absolute: {absolute}"
         )
 
+        attribution = Attribution(self.model, attr_method, absolute, n_samples)
+
         attr_list = []
         for idx in tqdm(range(self.data_dict["length"])):
             x, y = self.data_dict["x"][idx], int(self.data_dict["y"][idx])
             x = torch.as_tensor(x, device=self.device).unsqueeze(0)
-            if attr_method == "random_baseline":
-                attr_x = np.random.randn(*x.shape)
-            else:
-                attr_x = apply_attr_method(
-                    self.model, x, y, attr_method, absolute=absolute
-                )
-                attr_x = attr_x.detach().cpu().numpy()
-
+            attr_x = attribution.apply(x, y)
             attr_list.append(attr_x)
 
         return attr_list

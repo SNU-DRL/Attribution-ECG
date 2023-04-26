@@ -27,7 +27,9 @@ def main(args):
     evaluator = Evaluator(model, eval_attr_data, device, args.result_dir)
 
     # compute feature attribution
-    attr_list = evaluator.compute_attribution(args.attr_method, args.absolute)
+    attr_list = evaluator.compute_attribution(
+        args.attr_method, args.absolute, args.n_samples
+    )
 
     # evaluate feature attribution methods
     loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
