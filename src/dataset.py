@@ -12,31 +12,44 @@ from src.utils import preprocess
 
 
 class ECG_DataModule:
-    def __init__(self, dataset_path: str, batch_size: int, seed: int):
+    def __init__(self, dataset: str, dataset_path: str, batch_size: int, seed: int):
         """
         Args:
+            dataset (str): icentia11k OR mit-bih
             dataset_path (str): path to dataset file
             batch_size (int): batch size for dataloader
             seed (int): random seed
         """
+        self.dataset = dataset
         self.dataset_path = dataset_path
         self.seed = seed
         self.batch_size = batch_size
 
-        x, labels = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
-        x = preprocess(x)
-        x = np.expand_dims(x, axis=(1, 2))  # x.shape: (12000, 2049) -> (12000, 1, 1, 2049)
-        y = np.array([l["btype"] for l in labels])  # Extract btype label (beat label)
-        y_raw = np.array([l["btype_raw"] for l in labels], dtype=object)
+        if dataset == "icentia11k":
+            x, labels = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
+            x = preprocess(x)
+            x = np.expand_dims(x, axis=(1, 2))  # x.shape: (12000, 2049) -> (12000, 1, 1, 2049)
+            y = np.array([l["btype"] for l in labels])  # Extract btype label (beat label)
+            y_raw = np.array([l["btype_raw"] for l in labels], dtype=object)
 
-        x_train, x_test, y_train, y_test, y_raw_train, y_raw_test = train_test_split(
-            x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=seed
-        )
+            x_train, x_test, y_train, y_test, y_raw_train, y_raw_test = train_test_split(
+                x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=seed
+            )
+
+        elif dataset == "mit-bih":
+            data_dict = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
+            train_set, test_set = data_dict["train"], data_dict["test"]
+            x_train = np.expand_dims(preprocess(train_set["X"]), axis=(1,2))
+            y_train, y_raw_train = np.array([Y['y'] for Y in train_set["Y"]]), [Y['y_raw'] for Y in train_set["Y"]]
+            x_test = np.expand_dims(preprocess(test_set["X"]), axis=(1,2))
+            y_test, y_raw_test = np.array([Y['y'] for Y in test_set["Y"]]), [Y['y_raw'] for Y in test_set["Y"]]
 
         self.train_set = ECG_Dataset(x_train, y_train, y_raw_train)
         print(f"Loaded dataset for training: {len(self.train_set)}")
         self.test_set = ECG_Dataset(x_test, y_test, y_raw_test)
         print(f"Loaded dataset for test: {len(self.test_set)}")
+
+        self.num_classes = np.unique(np.concatenate([y_train, y_test])).size
 
     def train_dataloader(self):
         return DataLoader(

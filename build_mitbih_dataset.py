@@ -55,7 +55,7 @@ def build_label_dict(label_indices, locations):
         label_dict[label] = label_idx
     return label_dict
 
-
+result_dict = {}
 for set_key, set_pids in DS.items():
     X = []
     Y = []
@@ -63,7 +63,7 @@ for set_key, set_pids in DS.items():
         record = wfdb.rdrecord(f'{DATA_DIR}/{pid}')
         attr = wfdb.rdann(f'{DATA_DIR}/{pid}', extension='atr')
         sampling_rate = record.fs
-        recording = record.p_signal
+        recording = record.p_signal.astype(np.float32)
         
         window_size = WINDOW_SECONDS * sampling_rate
         n_samples = recording.shape[0] // window_size
@@ -101,5 +101,8 @@ for set_key, set_pids in DS.items():
             Y.append(y)
 
     X = np.array(X)
-    with gzip.open(f'{RESULT_DIR}/mitbih_{set_key}.pkl', 'wb') as f:
-        pickle.dump((X, Y), f)
+
+    result_dict[set_key] = {"X": X, "Y": Y}
+
+with gzip.open(f'{RESULT_DIR}/mit-bih.pkl', 'wb') as f:
+    pickle.dump(result_dict, f)

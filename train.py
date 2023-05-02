@@ -16,13 +16,13 @@ def main(args):
 
     # dataloader
     data_module = ECG_DataModule(
-        args.dataset_path, batch_size=args.batch_size, seed=args.seed
+        args.dataset, args.dataset_path, batch_size=args.batch_size, seed=args.seed
     )
     train_loader = data_module.train_dataloader()
     test_loader = data_module.test_dataloader()
 
     # model
-    model = ModelWrapper(args.model, num_classes=3)
+    model = ModelWrapper(args.model, num_classes=data_module.num_classes)
 
     # hyperparameters
     criterion = torch.nn.CrossEntropyLoss()
@@ -41,6 +41,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training an ECG classification model")
 
     # Dataset
+    parser.add_argument(
+        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih"]
+    )
     parser.add_argument(
         "--dataset_path", default="./data/12000_btype_new.pkl", type=str
     )

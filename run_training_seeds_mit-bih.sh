@@ -1,5 +1,6 @@
 # Dataset
-DATASET_PATH=./data/12000_btype_new.pkl
+DATASET=mit-bih
+DATASET_PATH=./data/mit-bih.pkl
 
 # Model
 MODEL="resnet18_7"
@@ -22,6 +23,7 @@ do
     RESULT_DIR=$RESULT_BASE_DIR'_seed'$SEED
 
     python train.py \
+        --dataset $DATASET \
         --dataset_path $DATASET_PATH \
         --model $MODEL \
         --batch_size $BATCH_SIZE \

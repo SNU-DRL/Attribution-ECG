@@ -21,7 +21,7 @@ ICENTIA_LABEL_MAPPING_REVERSE = {y: x for x, y in ICENTIA_LABEL_MAPPING.items()}
 def preprocess(data):
     """
     Standardization
-    data.shape: (# samples, 1(lead), frame_size)
+    data.shape: (# samples, frame_size)
     """
     m = np.expand_dims(data.mean(-1), -1)
     s = np.expand_dims(data.std(-1), -1)
