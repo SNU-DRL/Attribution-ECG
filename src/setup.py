@@ -5,6 +5,8 @@ import numpy as np
 import torch
 
 
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+
 def set_random_seed(SEED):
     print(f"-- Set random seed: {SEED}")
     random.seed(SEED)
@@ -20,9 +22,7 @@ def setup(args):
         set_random_seed(args.seed)
     if args.gpu_num is not None and torch.cuda.is_available():
         print(f"-- Use gpu: {args.gpu_num}")
-        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_num
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        return torch.device("cuda")
+        return torch.device(f"cuda:{args.gpu_num}")
     else:
         print(f"-- Use cpu")
         return torch.device("cpu")
