@@ -3,7 +3,7 @@ DATASET=icentia11k
 DATASET_PATH=./data/12000_btype_new.pkl
 
 # Model
-MODEL="resnet18_7"
+MODEL=resnet18_7
 
 # Hyperparameters
 BATCH_SIZE=128
@@ -14,7 +14,7 @@ EPOCHS=30
 # Settings
 GPU_NUM=0
 
-RESULT_BASE_DIR='results/'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
+RESULT_BASE_DIR='results/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 mkdir results
 
