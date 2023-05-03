@@ -84,7 +84,7 @@ def localization_score(attr_x, y, beat_spans):
 
 
 def pointing_game(attr_x, y, beat_spans):
-    attr_top1 = np.argmax(attr_x)
+    attr_top1 = np.random.choice(np.flatnonzero(attr_x == np.max(attr_x))) # random tie-breaking argmax
     is_correct = False
     for span in beat_spans[y]:
         is_correct = is_correct or (attr_top1 in range(*span))

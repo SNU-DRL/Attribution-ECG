@@ -16,7 +16,7 @@ def main(args):
     device = setup(args)
 
     # dataloader
-    data_module = ECG_DataModule(args.dataset_path, batch_size=128, seed=args.seed)
+    data_module = ECG_DataModule(args.dataset, args.dataset_path, batch_size=128, seed=args.seed)
     test_loader = data_module.test_dataloader()
 
     # model
@@ -57,6 +57,9 @@ if __name__ == "__main__":
     )
 
     # Dataset
+    parser.add_argument(
+        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih"]
+    )
     parser.add_argument(
         "--dataset_path", default="./data/12000_btype_new.pkl", type=str
     )
