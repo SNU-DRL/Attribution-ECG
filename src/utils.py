@@ -28,7 +28,7 @@ def preprocess(data):
     return (data - m) / (s + 1e-6)
 
 
-def get_beat_spans(y_raw, len_x=2049):
+def get_beat_spans(y_raw, len_x):
     beats = extract_beats(y_raw)
     beats = dict(sorted(beats.items()))
 

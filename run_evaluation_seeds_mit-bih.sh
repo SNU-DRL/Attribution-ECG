@@ -1,11 +1,11 @@
 # Dataset
-DATASET=icentia11k
-DATASET_PATH=./data/12000_btype_new.pkl
+DATASET=mit-bih
+DATASET_PATH=./data/mit-bih.pkl
 
 # Model
 MODEL=resnet18_7
 BATCH_SIZE=32
-LEARNING_RATE=1e-3
+LEARNING_RATE=5e-2
 WEIGHT_DECAY=1e-4
 EPOCHS=20
 BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
@@ -15,7 +15,7 @@ PROB_THRESHOLD=0.9
 ATTR_METHOD=gradcam
 
 # Settings
-GPU_NUM=0
+GPU_NUM=1
 
 mkdir results_eval
 

@@ -1,5 +1,6 @@
 import os
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -9,6 +10,8 @@ from src.attribution import (Attribution, degradation_score,
                              localization_score, pointing_game)
 from src.utils import get_beat_spans, plot_attribution
 
+matplotlib.rcParams['font.family'] = ['Arial']
+matplotlib.rcParams['font.size'] = 14
 
 class Evaluator:
     def __init__(self, model, data_dict, device, result_dir):
@@ -109,18 +112,29 @@ class Evaluator:
         MoRF = np.mean(MoRFs_normalized, axis=0)
         area = np.sum(LeRF - MoRF) / (LeRF.shape[0] - 1)
 
-        self._plot_deg_curve(perturbation, LeRF, MoRF, area, len(attr_list))
+        self._plot_deg_curve(perturbation, window_size, LeRF, MoRF, area, len(attr_list))
 
         return area
 
-    def _plot_deg_curve(self, perturbation, LeRF, MoRF, area, num_samples):
-        plt.figure(figsize=(7, 7))
-        plt.title(f"Perturbation: {perturbation}, Area: {area:.4f}, N: {num_samples}")
-        plt.plot(LeRF, label="LeRF")
-        plt.plot(MoRF, label="MoRF")
-        plt.legend()
+    def _plot_deg_curve(self, perturbation, window_size, LeRF, MoRF, score, num_samples):
+        fig, ax = plt.subplots(figsize=(10, 10))
+        x = np.arange(len(LeRF)) / (len(LeRF)-1) * 100
+        ax.plot(x, LeRF, label="LeRF")
+        ax.plot(x, MoRF, label="MoRF", linestyle="--")
+        ax.set_xlim([-5,105])
+        ax.fill_between(x, LeRF, MoRF, color="lightgrey", label="score")
+        ax.set_xlabel("degradation of x [%]", fontsize=18)
+        ax.set_ylabel("normalized score", fontsize=18)
+        ax.grid()
+        ax.legend(fontsize=18)
+        fig.tight_layout()
+
         plt.savefig(
-            f"{self.result_dir}/deg_curve_{perturbation}.png",
+            f"{self.result_dir}/deg_curve_{perturbation}_{window_size}.png",
             bbox_inches="tight",
         )
         plt.close()
+
+        # save additional infomation
+        with open(f"{self.result_dir}/deg_curve_{perturbation}_{window_size}.txt", "w") as f:
+            f.write(f"perturbation,{perturbation}\nwindow size,{window_size}\nscore,{score}\nN,{num_samples}")

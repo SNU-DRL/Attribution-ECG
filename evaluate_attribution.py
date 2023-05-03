@@ -16,7 +16,7 @@ def main(args):
     device = setup(args)
 
     # dataloader
-    data_module = ECG_DataModule(args.dataset, args.dataset_path, batch_size=128, seed=args.seed)
+    data_module = ECG_DataModule(args.dataset, args.dataset_path, batch_size=32, seed=args.seed)
     test_loader = data_module.test_dataloader()
 
     # model

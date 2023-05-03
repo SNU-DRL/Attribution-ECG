@@ -6,10 +6,10 @@ DATASET_PATH=./data/12000_btype_new.pkl
 MODEL=resnet18_7
 
 # Hyperparameters
-BATCH_SIZE=128
+BATCH_SIZE=32
 LEARNING_RATE=1e-3
 WEIGHT_DECAY=1e-4
-EPOCHS=30
+EPOCHS=20
 
 # Settings
 GPU_NUM=0
@@ -18,7 +18,7 @@ RESULT_BASE_DIR='results/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_
 
 mkdir results
 
-for SEED in 0 1 2 3 4
+for SEED in 1 2 3 4 5
 do
     RESULT_DIR=$RESULT_BASE_DIR'_seed'$SEED
 

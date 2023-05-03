@@ -1,4 +1,5 @@
 # For this project
+*.ipynb
 data*/
 result*/
 old/
