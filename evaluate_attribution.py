@@ -20,7 +20,7 @@ def main(args):
     test_loader = data_module.test_dataloader()
 
     # model
-    model = torch.load(args.model_path)
+    model = torch.load(args.model_path, map_location=device)
 
     # initalize evaluator for evaluating feature attribution methods
     eval_attr_data = get_eval_attr_data(test_loader, model, args.prob_threshold, device)

@@ -22,8 +22,8 @@ class ECG_DataModule:
         """
         self.dataset = dataset
         self.dataset_path = dataset_path
-        self.seed = seed
         self.batch_size = batch_size
+        self.seed = seed
 
         if dataset == "icentia11k":
             x, labels = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
@@ -33,7 +33,7 @@ class ECG_DataModule:
             y_raw = np.array([l["btype_raw"] for l in labels], dtype=object)
 
             x_train, x_test, y_train, y_test, y_raw_train, y_raw_test = train_test_split(
-                x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=seed
+                x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=self.seed
             )
 
         elif dataset == "mit-bih":
@@ -64,8 +64,8 @@ class ECG_DataModule:
 
 class ECG_Dataset(Dataset):
     def __init__(self, x, y, y_raw, prob=None):
-        self.x = torch.from_numpy(x)
-        self.y = torch.from_numpy(y)
+        self.x = x
+        self.y = y
         self.y_raw = y_raw
         self.prob = prob
 
