@@ -109,7 +109,8 @@ def degradation_score(
     - gaussian_pluse: add a Gaussian noise to the window
     """
     truncate_idx = len(x) % window_size
-    x, attr_x = x[:-truncate_idx], attr_x[:-truncate_idx]
+    if truncate_idx > 0:
+        x, attr_x = x[:-truncate_idx], attr_x[:-truncate_idx]
     attr_x = attr_x.reshape(-1, window_size)
 
     attr_window_score = attr_x.sum(1)

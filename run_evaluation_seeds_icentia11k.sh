@@ -33,7 +33,7 @@ do
         --attr_method $ATTR_METHOD \
         --gpu_num $GPU_NUM \
         --seed $SEED \
-        --result_dir $RESULT_DIR
+        --result_dir $RESULT_DIR \
 
     RESULT_DIR=results_eval/$MODEL_DIR/$ATTR_METHOD'_absolute'
     python evaluate_attribution.py \
@@ -45,7 +45,7 @@ do
         --absolute \
         --gpu_num $GPU_NUM \
         --seed $SEED \
-        --result_dir $RESULT_DIR
+        --result_dir $RESULT_DIR \
 done
 
 python process_evaluation_results.py results_eval/$BASE_DIR

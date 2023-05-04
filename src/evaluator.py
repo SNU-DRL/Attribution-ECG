@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from src.attribution import (Attribution, degradation_score,
                              localization_score, pointing_game)
-from src.utils import get_beat_spans, plot_attribution
+from src.utils import plot_attribution
 
 matplotlib.rcParams['font.family'] = ['Arial']
 matplotlib.rcParams['font.size'] = 14
@@ -46,23 +46,22 @@ class Evaluator:
 
         return attr_list
 
-    def visualize(self, attr_list):
+    def visualize(self, dataset, attr_list):
         vis_dir = f"{self.result_dir}/vis"
         os.makedirs(vis_dir, exist_ok=True)
         for idx in tqdm(range(self.data_dict["length"])):
-            x, y, y_raw, prob = self.data_dict["x"][idx], int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx], self.data_dict["prob"][idx]
+            x, y, beat_spans, prob = self.data_dict["x"][idx], int(self.data_dict["y"][idx]), self.data_dict["beat_spans"][idx], self.data_dict["prob"][idx]
             attr_x = attr_list[idx]
             vis_path = f"{vis_dir}/label{y}_prob{prob:.6f}_id{idx}.png"
-            plot_attribution(x, y, y_raw, prob, attr_x, vis_path)
+            plot_attribution(x, y, beat_spans, prob, attr_x, dataset, vis_path)
 
     def get_localization_score(self, attr_list):
         print("Calculating localization score...")
         loc_score_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
-            y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
+            y, beat_spans = int(self.data_dict["y"][idx]), self.data_dict["beat_spans"][idx]
             attr_x = attr_list[idx].squeeze()
-            beat_spans = get_beat_spans(y_raw, len(attr_x))
 
             loc_score = localization_score(attr_x, y, beat_spans)
             loc_score_list.append(loc_score)
@@ -74,9 +73,8 @@ class Evaluator:
         pnt_result_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
-            y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
+            y, beat_spans = int(self.data_dict["y"][idx]), self.data_dict["beat_spans"][idx]
             attr_x = attr_list[idx].squeeze()
-            beat_spans = get_beat_spans(y_raw, len(attr_x))
 
             is_correct = pointing_game(attr_x, y, beat_spans)
             pnt_result_list.append(is_correct)

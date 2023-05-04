@@ -11,7 +11,7 @@ EPOCHS=20
 BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 # Feature attribution methods
-PROB_THRESHOLD=0.9
+PROB_THRESHOLD=0.75
 ATTR_METHOD=gradcam
 
 # Settings

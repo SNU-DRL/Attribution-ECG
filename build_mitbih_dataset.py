@@ -11,7 +11,7 @@ import wfdb
 from tqdm import tqdm
 
 WINDOW_SECONDS = 8
-DATA_DIR = './mit-bih-arrhythmia-database-1.0.0'
+DATA_DIR = './data/mit-bih-arrhythmia-database-1.0.0'
 RESULT_DIR = './data'
 os.makedirs(RESULT_DIR, exist_ok=True)
 
@@ -48,12 +48,12 @@ def get_beat_idx(label):
     return 0 # if label not in any beat_classes -> return 0 (normal)
 
 
-def build_label_dict(label_indices, locations):
-    label_dict = {}
+def build_label_array(label_indices, locations):
+    label_array = [np.array([]) for _ in range(len(MITBIH_BEAT_INDEX))]
     for label in np.unique(label_indices):
         label_idx = locations[label == label_indices]
-        label_dict[label] = label_idx
-    return label_dict
+        label_array[label] = label_idx
+    return label_array
 
 result_dict = {}
 for set_key, set_pids in DS.items():
@@ -89,12 +89,12 @@ for set_key, set_pids in DS.items():
             else:
                 label = 0
 
-            label_dict = build_label_dict(beat_label_indices, beat_locations)
+            label_array = build_label_array(beat_label_indices, beat_locations)
 
             y = {
                 'pid': pid,
                 'y': label,
-                'y_raw': label_dict
+                'y_raw': label_array
             }
 
             X.append(x)

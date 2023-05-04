@@ -23,7 +23,7 @@ def main(args):
     model = torch.load(args.model_path, map_location=device)
 
     # initalize evaluator for evaluating feature attribution methods
-    eval_attr_data = get_eval_attr_data(test_loader, model, args.prob_threshold, device)
+    eval_attr_data = get_eval_attr_data(args.dataset, test_loader, model, args.prob_threshold, device)
     evaluator = Evaluator(model, eval_attr_data, device, args.result_dir)
 
     # compute feature attribution
@@ -32,7 +32,7 @@ def main(args):
     )
 
     if args.visualize:
-        evaluator.visualize(attr_list)
+        evaluator.visualize(args.dataset, attr_list)
 
     # evaluate feature attribution methods
     loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Feature attribution method
     parser.add_argument(
         "--prob_threshold",
-        default=0.9,
+        default=0.75,
         type=float,
         help="select samples with higher prediction prob.",
     )

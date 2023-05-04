@@ -1,21 +1,37 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-ICENTIA_BEAT_INDEX = {
-    0: "undefined",  # Undefined
-    1: "normal",  # Normal
-    2: "pac",  # ESSV (PAC)
-    3: "aberrated",  # Aberrated
-    4: "pvc",  # ESV (PVC)
+LABEL_MAPPING = {
+    "icentia11k": {
+        "BEAT_INDEX": {
+            0: "undefined",  # Undefined
+            1: "normal",  # Normal
+            2: "pac",  # ESSV (PAC)
+            3: "aberrated",  # Aberrated
+            4: "pvc",  # ESV (PVC)
+        },
+        "LABEL_INDEX": {
+            0: "normal",
+            1: "pac",
+            2: "pvc",
+        },
+        "LABEL_INDEX_REVERSE": {
+            "normal": 0,
+            "pac": 1,
+            "pvc": 2,
+        },
+    },
+    "mit-bih": {
+        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
+        "LABEL_INDEX": {
+            0: "N",
+            1: "SVEB",
+            2: "VEB",
+            3: "F",
+        },
+        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
+    },
 }
-
-ICENTIA_LABEL_MAPPING = {
-    "normal": 0,
-    "pac": 1,
-    "pvc": 2,
-}
-
-ICENTIA_LABEL_MAPPING_REVERSE = {y: x for x, y in ICENTIA_LABEL_MAPPING.items()}
 
 
 def preprocess(data):
@@ -28,31 +44,33 @@ def preprocess(data):
     return (data - m) / (s + 1e-6)
 
 
-def get_beat_spans(y_raw, len_x):
-    beats = extract_beats(y_raw)
+def get_beat_spans(y_raw, len_x, dataset):
+    label_index_reverse = LABEL_MAPPING[dataset]["LABEL_INDEX_REVERSE"]
+    beats = extract_beats(y_raw, dataset)
     beats = dict(sorted(beats.items()))
 
     r_peaks = np.array(list(beats.keys()))
     beat_boundaries = (r_peaks[1:] + r_peaks[:-1]) // 2
     beat_onsets = np.insert(beat_boundaries, 0, 0)  # inclusive
     beat_offsets = np.append(beat_boundaries, len_x)  # exclusive
-    beat_spans = {0: [], 1: [], 2: []}
+    beat_spans = {idx: [] for idx in label_index_reverse.values()}
 
     for beat, onset, offset in zip(beats.values(), beat_onsets, beat_offsets):
-        if beat not in ["normal", "pac", "pvc"]:
+        if beat not in label_index_reverse.keys():
             continue
-        beat_spans[ICENTIA_LABEL_MAPPING[beat]].append(
+        beat_spans[label_index_reverse[beat]].append(
             (onset, offset)
         )  # span: [onset, offset-1]
 
     return beat_spans
 
 
-def extract_beats(y_raw):
+def extract_beats(y_raw, dataset):
+    beat_index = LABEL_MAPPING[dataset]["BEAT_INDEX"]
     label_dict = {}
     for i, indices in enumerate(y_raw):
         for j in indices:
-            label_dict[j] = ICENTIA_BEAT_INDEX[i]
+            label_dict[j] = beat_index[i]
     return label_dict
 
 
@@ -65,8 +83,8 @@ ATTR_ALPHA = 0.5
 ATTR_LW = 2
 
 
-def plot_attribution(x, y, y_raw, prob, attr_x, path):
-    beat_spans = get_beat_spans(y_raw)
+def plot_attribution(x, y, beat_spans, prob, attr_x, dataset, path):
+    label_index = LABEL_MAPPING[dataset]["LABEL_INDEX"]
     fig, ax1 = plt.subplots(figsize=ATTR_FIGSIZE)
     ax2 = ax1.twinx()
 
@@ -81,12 +99,12 @@ def plot_attribution(x, y, y_raw, prob, attr_x, path):
             ax1.text(
                 np.mean(span),
                 -18,
-                ICENTIA_LABEL_MAPPING_REVERSE[class_idx],
+                label_index[class_idx],
                 fontsize=15,
                 horizontalalignment="center",
             )
 
-    label = ICENTIA_LABEL_MAPPING_REVERSE[y]
+    label = label_index[y]
     plt.title(f"Label: {label}, Prob: {prob:.6f}")
 
     # Attribution
