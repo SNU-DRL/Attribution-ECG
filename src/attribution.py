@@ -45,6 +45,8 @@ class Attribution:
         if self.attr_method == "random_baseline":
             attr_x = np.random.randn(*x.shape)
             return attr_x
+        elif self.attr_method == "saliency":
+            attr_x = self.attr_func.attribute(x, target=y, abs=self.absolute)
         elif self.attr_method in ["lime", "kernel_shap"]:
             attr_x = self.attr_func.attribute(x, target=y, n_samples=self.n_samples)
         elif self.attr_method == "deep_shap":
