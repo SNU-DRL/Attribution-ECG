@@ -124,7 +124,7 @@ class Evaluator:
         ax.set_xlabel("degradation of x [%]", fontsize=18)
         ax.set_ylabel("normalized score", fontsize=18)
         ax.grid()
-        ax.legend(fontsize=18)
+        ax.legend(fontsize=18, loc="upper right", framealpha=0.7)
         fig.tight_layout()
 
         plt.savefig(

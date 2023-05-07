@@ -39,7 +39,7 @@ def main(args):
     pnt_accuracy = evaluator.get_pointing_game_accuracy(attr_list)
     deg_score_mean = evaluator.get_degradation_score(attr_list, "mean", args.deg_window_size)
     deg_score_linear = evaluator.get_degradation_score(attr_list, "linear", args.deg_window_size)
-    deg_score_gaussian_plus = evaluator.get_degradation_score(attr_list, "gaussian_plus", args.deg_window_size)
+    deg_score_gaussian = evaluator.get_degradation_score(attr_list, "gaussian", args.deg_window_size)
 
     # save results
     results = pd.Series(
@@ -48,7 +48,7 @@ def main(args):
             "pnt_accuracy": pnt_accuracy,
             "deg_score_mean": deg_score_mean,
             "deg_score_linear": deg_score_linear,
-            "deg_score_gaussian_plus": deg_score_gaussian_plus,
+            "deg_score_gaussian": deg_score_gaussian,
         }
     )
     results.to_csv(f"{args.result_dir}/result.csv", header=["value"])
