@@ -13,6 +13,10 @@ BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'
 # Feature attribution methods
 PROB_THRESHOLD=0.9
 ATTR_METHOD=gradcam
+N_SAMPLES=500
+
+# Evaluation metrics
+DEG_WINDOW_SIZE=16
 
 # Settings
 GPU_NUM=0
@@ -31,6 +35,8 @@ do
         --model_path $MODEL_PATH \
         --prob_threshold $PROB_THRESHOLD \
         --attr_method $ATTR_METHOD \
+        --n_samples $N_SAMPLES \
+        --deg_window_size $DEG_WINDOW_SIZE \
         --gpu_num $GPU_NUM \
         --seed $SEED \
         --result_dir $RESULT_DIR
@@ -43,6 +49,8 @@ do
         --prob_threshold $PROB_THRESHOLD \
         --attr_method $ATTR_METHOD \
         --absolute \
+        --n_samples $N_SAMPLES \
+        --deg_window_size $DEG_WINDOW_SIZE \
         --gpu_num $GPU_NUM \
         --seed $SEED \
         --result_dir $RESULT_DIR

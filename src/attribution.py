@@ -54,7 +54,7 @@ class Attribution:
                 x,
                 target=y,
                 baselines=torch.randn(
-                    [self.n_samples] + list(x.shape[1:]), device=x.device
+                    [250, *list(x.shape[1:])], device=x.device
                 ),
             )
         else:
