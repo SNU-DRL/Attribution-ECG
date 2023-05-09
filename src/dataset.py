@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from src.utils import preprocess
+from src.utils import preprocess, get_beat_spans
 
 
 class ECG_DataModule:
@@ -22,18 +22,18 @@ class ECG_DataModule:
         """
         self.dataset = dataset
         self.dataset_path = dataset_path
-        self.seed = seed
         self.batch_size = batch_size
+        self.seed = seed
 
         if dataset == "icentia11k":
             x, labels = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
             x = preprocess(x)
             x = np.expand_dims(x, axis=(1, 2))  # x.shape: (12000, 2049) -> (12000, 1, 1, 2049)
             y = np.array([l["btype"] for l in labels])  # Extract btype label (beat label)
-            y_raw = np.array([l["btype_raw"] for l in labels], dtype=object)
+            y_raw = [l["btype_raw"] for l in labels]
 
             x_train, x_test, y_train, y_test, y_raw_train, y_raw_test = train_test_split(
-                x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=seed
+                x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=self.seed
             )
 
         elif dataset == "mit-bih":
@@ -64,8 +64,8 @@ class ECG_DataModule:
 
 class ECG_Dataset(Dataset):
     def __init__(self, x, y, y_raw, prob=None):
-        self.x = torch.from_numpy(x)
-        self.y = torch.from_numpy(y)
+        self.x = x
+        self.y = y
         self.y_raw = y_raw
         self.prob = prob
 
@@ -78,7 +78,7 @@ class ECG_Dataset(Dataset):
         return idx, x, y
 
 @torch.no_grad()
-def get_eval_attr_data(dataloader, model, prob_threshold, device):
+def get_eval_attr_data(dataset, dataloader, model, prob_threshold, device):
     """
     returns dictionary of data for evaluating feature attribution methods.
     (samples with correct prediction with high prob.)
@@ -90,6 +90,7 @@ def get_eval_attr_data(dataloader, model, prob_threshold, device):
     x_list = []
     y_list = []
     y_raw_list = []
+    beat_spans_list = []
     prob_list = []
 
     print("Prepare dataset for evaluating feature attribution methods...")
@@ -112,13 +113,17 @@ def get_eval_attr_data(dataloader, model, prob_threshold, device):
             if label > 0 and prob[label] > prob_threshold:
                 x_list.append(x[i])
                 y_list.append(label)
-                y_raw_list.append(dataloader.dataset.y_raw[idx[i]])
+                y_raw = dataloader.dataset.y_raw[idx[i]]
+                y_raw_list.append(y_raw)
+                beat_spans = get_beat_spans(y_raw, x[i].shape[-1], dataset)
+                beat_spans_list.append(beat_spans)
                 prob_list.append(prob[label])
 
     data_dict = {
         "x": x_list,
         "y": y_list,
         "y_raw": y_raw_list,
+        "beat_spans": beat_spans_list,
         "prob": prob_list,
         "length": len(prob_list)
     }

@@ -1,5 +1,6 @@
 import os
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -7,8 +8,10 @@ from tqdm import tqdm
 
 from src.attribution import (Attribution, degradation_score,
                              localization_score, pointing_game)
-from src.utils import get_beat_spans, plot_attribution
+from src.utils import plot_attribution
 
+matplotlib.rcParams['font.family'] = ['Arial']
+matplotlib.rcParams['font.size'] = 14
 
 class Evaluator:
     def __init__(self, model, data_dict, device, result_dir):
@@ -43,23 +46,22 @@ class Evaluator:
 
         return attr_list
 
-    def visualize(self, attr_list):
+    def visualize(self, dataset, attr_list):
         vis_dir = f"{self.result_dir}/vis"
         os.makedirs(vis_dir, exist_ok=True)
         for idx in tqdm(range(self.data_dict["length"])):
-            x, y, y_raw, prob = self.data_dict["x"][idx], int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx], self.data_dict["prob"][idx]
+            x, y, beat_spans, prob = self.data_dict["x"][idx], int(self.data_dict["y"][idx]), self.data_dict["beat_spans"][idx], self.data_dict["prob"][idx]
             attr_x = attr_list[idx]
             vis_path = f"{vis_dir}/label{y}_prob{prob:.6f}_id{idx}.png"
-            plot_attribution(x, y, y_raw, prob, attr_x, vis_path)
+            plot_attribution(x, y, beat_spans, prob, attr_x, dataset, vis_path)
 
     def get_localization_score(self, attr_list):
         print("Calculating localization score...")
         loc_score_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
-            y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
+            y, beat_spans = int(self.data_dict["y"][idx]), self.data_dict["beat_spans"][idx]
             attr_x = attr_list[idx].squeeze()
-            beat_spans = get_beat_spans(y_raw, len(attr_x))
 
             loc_score = localization_score(attr_x, y, beat_spans)
             loc_score_list.append(loc_score)
@@ -71,9 +73,8 @@ class Evaluator:
         pnt_result_list = []
 
         for idx in tqdm(range(self.data_dict["length"])):
-            y, y_raw = int(self.data_dict["y"][idx]), self.data_dict["y_raw"][idx]
+            y, beat_spans = int(self.data_dict["y"][idx]), self.data_dict["beat_spans"][idx]
             attr_x = attr_list[idx].squeeze()
-            beat_spans = get_beat_spans(y_raw, len(attr_x))
 
             is_correct = pointing_game(attr_x, y, beat_spans)
             pnt_result_list.append(is_correct)
@@ -109,18 +110,29 @@ class Evaluator:
         MoRF = np.mean(MoRFs_normalized, axis=0)
         area = np.sum(LeRF - MoRF) / (LeRF.shape[0] - 1)
 
-        self._plot_deg_curve(perturbation, LeRF, MoRF, area, len(attr_list))
+        self._plot_deg_curve(perturbation, window_size, LeRF, MoRF, area, len(attr_list))
 
         return area
 
-    def _plot_deg_curve(self, perturbation, LeRF, MoRF, area, num_samples):
-        plt.figure(figsize=(7, 7))
-        plt.title(f"Perturbation: {perturbation}, Area: {area:.4f}, N: {num_samples}")
-        plt.plot(LeRF, label="LeRF")
-        plt.plot(MoRF, label="MoRF")
-        plt.legend()
+    def _plot_deg_curve(self, perturbation, window_size, LeRF, MoRF, score, num_samples):
+        fig, ax = plt.subplots(figsize=(10, 10))
+        x = np.arange(len(LeRF)) / (len(LeRF)-1) * 100
+        ax.plot(x, LeRF, label="LeRF")
+        ax.plot(x, MoRF, label="MoRF", linestyle="--")
+        ax.set_xlim([-5,105])
+        ax.fill_between(x, LeRF, MoRF, color="lightgrey", label="score")
+        ax.set_xlabel("degradation of x [%]", fontsize=18)
+        ax.set_ylabel("normalized score", fontsize=18)
+        ax.grid()
+        ax.legend(fontsize=18, loc="upper right", framealpha=0.7)
+        fig.tight_layout()
+
         plt.savefig(
-            f"{self.result_dir}/deg_curve_{perturbation}.png",
+            f"{self.result_dir}/deg_curve_{perturbation}_{window_size}.png",
             bbox_inches="tight",
         )
         plt.close()
+
+        # save additional infomation
+        with open(f"{self.result_dir}/deg_curve_{perturbation}_{window_size}.txt", "w") as f:
+            f.write(f"perturbation,{perturbation}\nwindow size,{window_size}\nscore,{score}\nN,{num_samples}")

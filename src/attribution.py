@@ -45,6 +45,8 @@ class Attribution:
         if self.attr_method == "random_baseline":
             attr_x = np.random.randn(*x.shape)
             return attr_x
+        elif self.attr_method == "saliency":
+            attr_x = self.attr_func.attribute(x, target=y, abs=self.absolute)
         elif self.attr_method in ["lime", "kernel_shap"]:
             attr_x = self.attr_func.attribute(x, target=y, n_samples=self.n_samples)
         elif self.attr_method == "deep_shap":
@@ -52,7 +54,7 @@ class Attribution:
                 x,
                 target=y,
                 baselines=torch.randn(
-                    [self.n_samples] + list(x.shape[1:]), device=x.device
+                    [250, *list(x.shape[1:])], device=x.device
                 ),
             )
         else:
@@ -109,7 +111,8 @@ def degradation_score(
     - gaussian_pluse: add a Gaussian noise to the window
     """
     truncate_idx = len(x) % window_size
-    x, attr_x = x[:-truncate_idx], attr_x[:-truncate_idx]
+    if truncate_idx > 0:
+        x, attr_x = x[:-truncate_idx], attr_x[:-truncate_idx]
     attr_x = attr_x.reshape(-1, window_size)
 
     attr_window_score = attr_x.sum(1)
@@ -144,21 +147,21 @@ def degradation_score(
 
 def degrade(x, idx, perturbation, window_size):
     x = x.reshape(-1, window_size)
-    if idx == 0:
-        left_end = x[idx][0]
-        right_end = x[idx + 1][0]
-    elif idx == len(x) - 1:
-        left_end = x[idx - 1][-1]
-        right_end = x[idx][-1]
-    else:
-        left_end = x[idx - 1][-1]
-        right_end = x[idx + 1][0]
 
     if perturbation == "zero":
         x[idx] = np.zeros(window_size)
     elif perturbation == "mean":
         x[idx] = np.full(window_size, x[idx].mean())
     elif perturbation == "linear":
+        if idx == 0:
+            left_end = x[idx][0]
+            right_end = x[idx + 1][0]
+        elif idx == len(x) - 1:
+            left_end = x[idx - 1][-1]
+            right_end = x[idx][-1]
+        else:
+            left_end = x[idx - 1][-1]
+            right_end = x[idx + 1][0]
         x[idx] = np.linspace(left_end, right_end, window_size)
     elif perturbation == "gaussian":
         x[idx] = np.random.randn(window_size)
