@@ -1,4 +1,4 @@
-# https://www.physionet.org/content/mitdb/1.0.0/
+# https://physionet.org/content/incartdb/1.0.0/
 
 import gzip
 import os
