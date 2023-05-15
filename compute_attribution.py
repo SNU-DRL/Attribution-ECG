@@ -1,11 +1,14 @@
 import argparse
+import gzip
+import json
 import os
+import pickle
 
 import torch
+from tqdm import tqdm
 
-from src.attribution import ATTRIBUTION_METHODS
+from src.attribution import ATTRIBUTION_METHODS, Attribution
 from src.dataset import ECG_DataModule, get_eval_attr_data
-from src.evaluator_vis_only import Evaluator
 from src.setup import setup
 
 
@@ -14,24 +17,33 @@ def main(args):
     device = setup(args)
 
     # dataloader
-    data_module = ECG_DataModule(
-        args.dataset, args.dataset_path, batch_size=32, seed=args.seed
-    )
+    data_module = ECG_DataModule(args.dataset, args.dataset_path, batch_size=32, seed=args.seed)
     test_loader = data_module.test_dataloader()
 
     # model
     model = torch.load(args.model_path, map_location=device)
 
     # initalize evaluator for evaluating feature attribution methods
-    eval_attr_data = get_eval_attr_data(
-        args.dataset, test_loader, model, args.prob_threshold, device
-    )
-    evaluator = Evaluator(model, eval_attr_data, device, args.result_dir)
+    eval_attr_data = get_eval_attr_data(args.dataset, test_loader, model, args.prob_threshold, device)
 
     # compute feature attribution
-    evaluator.compute_and_visualize_attribution(
-        args.dataset, args.attr_method, args.absolute, args.n_samples, args.n_samples_vis
-    )
+    model.eval()
+    model.to(device)
+    
+    attribution = Attribution(model, args.attr_method, args.n_samples)
+
+    attr_list = []
+    for idx in tqdm(range(eval_attr_data["length"])):
+        x, y = eval_attr_data["x"][idx], int(eval_attr_data["y"][idx])
+        x = torch.as_tensor(x, device=device).unsqueeze(0)
+        attr_x = attribution.apply(x, y)
+        attr_list.append(attr_x)
+
+    # save eval_attr_data & feature attribution
+    with gzip.open(f"{args.result_dir}/eval_attr_data.pkl", "wb") as f:
+        pickle.dump(eval_attr_data, f)
+    with gzip.open(f"{args.result_dir}/attr_list.pkl", "wb") as f:
+        pickle.dump(attr_list, f)
 
 
 if __name__ == "__main__":
@@ -41,7 +53,7 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih"]
+        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih", "st-petersburg"]
     )
     parser.add_argument(
         "--dataset_path", default="./data/12000_btype_new.pkl", type=str
@@ -60,7 +72,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--attr_method", default="gradcam", type=str, choices=ATTRIBUTION_METHODS.keys()
     )
-    parser.add_argument("--absolute", action="store_true")
     parser.add_argument(
         "--n_samples",
         default=500,
@@ -75,15 +86,14 @@ if __name__ == "__main__":
     parser.add_argument("--seed", default=0, type=int, help="random seed")
 
     # Result
-    parser.add_argument(
-        "--n_samples_vis",
-        default=20,
-        type=int,
-        help="number of samples for visualization",
-    )
-    parser.add_argument("--result_dir", default="./result_eval", type=str)
+    parser.add_argument("--result_dir", default="./result_attr", type=str)
 
     args = parser.parse_args()
     os.makedirs(args.result_dir, exist_ok=True)
+
+    # Save arguments
+    with open(os.path.join(args.result_dir, "args.json"), "w") as f:
+        json.dump(vars(args), f, indent=4)
+    print(json.dumps(vars(args), indent=4))
 
     main(args)

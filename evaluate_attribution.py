@@ -1,117 +1,79 @@
 import argparse
 import json
 import os
+import pickle
+import gzip
 
 import pandas as pd
 import torch
 
-from src.attribution import ATTRIBUTION_METHODS
-from src.dataset import ECG_DataModule, get_eval_attr_data
-from src.evaluator import Evaluator
+from src.metrics import EVALUATION_METRICS, evaluate_attribution
 from src.setup import setup
+from src.utils import visualize
 
 
 def main(args):
     # device
     device = setup(args)
 
-    # dataloader
-    data_module = ECG_DataModule(args.dataset, args.dataset_path, batch_size=32, seed=args.seed)
-    test_loader = data_module.test_dataloader()
-
     # model
     model = torch.load(args.model_path, map_location=device)
 
-    # initalize evaluator for evaluating feature attribution methods
-    eval_attr_data = get_eval_attr_data(args.dataset, test_loader, model, args.prob_threshold, device)
-    evaluator = Evaluator(model, eval_attr_data, device, args.result_dir)
-
-    # compute feature attribution
-    attr_list = evaluator.compute_attribution(
-        args.attr_method, args.absolute, args.n_samples
-    )
+    # load eval_attr_data & feature attribution
+    eval_attr_data = pickle.load(gzip.GzipFile(f"{args.attr_dir}/eval_attr_data.pkl", "rb"))
+    attr_list = pickle.load(gzip.GzipFile(f"{args.attr_dir}/attr_list.pkl", "rb"))
 
     if args.visualize:
-        evaluator.visualize(args.dataset, attr_list)
+        visualize(args.dataset, eval_attr_data, attr_list, args.vis_dir, args.n_samples_vis)
 
     # evaluate feature attribution methods
-    loc_score_mean, loc_score_std = evaluator.get_localization_score(attr_list)
-    pnt_accuracy = evaluator.get_pointing_game_accuracy(attr_list)
-    deg_score_mean = evaluator.get_degradation_score(attr_list, "mean", args.deg_window_size)
-    deg_score_linear = evaluator.get_degradation_score(attr_list, "linear", args.deg_window_size)
-    deg_score_gaussian = evaluator.get_degradation_score(attr_list, "gaussian", args.deg_window_size)
-
-    # save results
-    results = pd.Series(
-        {
-            "loc_score_mean": loc_score_mean,
-            "pnt_accuracy": pnt_accuracy,
-            "deg_score_mean": deg_score_mean,
-            "deg_score_linear": deg_score_linear,
-            "deg_score_gaussian": deg_score_gaussian,
-        }
-    )
-    results.to_csv(f"{args.result_dir}/result.csv", header=["value"])
-
+    metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, args.absolute)
+    print(f"Final result: {metric_result:.4f}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Evaluating feature attribution methods"
     )
 
-    # Dataset
+    # Attribution result dir
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih", "st-petersburg"]
+        "--attr_dir", default="./result_attr", type=str
     )
-    parser.add_argument(
-        "--dataset_path", default="./data/12000_btype_new.pkl", type=str
-    )
-
+    
     # Model
     parser.add_argument("--model_path", default="./result/model_last.pt", type=str)
 
-    # Feature attribution method
+    # Evaluation metric
     parser.add_argument(
-        "--prob_threshold",
-        default=0.9,
-        type=float,
-        help="select samples with higher prediction prob.",
-    )
-    parser.add_argument(
-        "--attr_method", default="gradcam", type=str, choices=ATTRIBUTION_METHODS.keys()
+        "--eval_metric", default="attribution_localization", type=str, choices=EVALUATION_METRICS.keys()
     )
     parser.add_argument("--absolute", action="store_true")
-    parser.add_argument(
-        "--n_samples",
-        default=500,
-        type=int,
-        help="number of samples used for lime / kernel_shap",
-    )
-
-    # Evaluation metrics for feature attribution methods
-    parser.add_argument(
-        "--deg_window_size",
-        default=16,
-        type=int,
-        help="window size for degradation score",
-    )
-
+    
     # Settings
-    parser.add_argument("--visualize", action="store_true")
     parser.add_argument(
         "--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)"
     )
     parser.add_argument("--seed", default=0, type=int, help="random seed")
 
     # Result
+    parser.add_argument("--visualize", action="store_true")
+    parser.add_argument(
+        "--n_samples_vis",
+        default=30,
+        type=int,
+        help="number of samples for visualization",
+    )
     parser.add_argument("--result_dir", default="./result_eval", type=str)
-
+    
     args = parser.parse_args()
     os.makedirs(args.result_dir, exist_ok=True)
 
-    # Save arguments
-    with open(os.path.join(args.result_dir, "args.json"), "w") as f:
-        json.dump(vars(args), f, indent=4)
-    print(json.dumps(vars(args), indent=4))
-
+    # Load arguments
+    with open(os.path.join(args.attr_dir, "args.json"), "r") as f:
+        args_dict = json.load(f)
+    args_dict.update(vars(args))
+    args = argparse.Namespace(**args_dict)
+    
+    args.vis_dir = f"{args.result_dir}/vis"
+    
     main(args)
