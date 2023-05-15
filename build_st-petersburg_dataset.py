@@ -11,11 +11,10 @@ import wfdb
 from tqdm import tqdm
 
 WINDOW_SECONDS = 8
-DATA_DIR = 'physionet.org/files/incartdb/1.0.0'
+DATA_DIR = './data/st-petersburg-incart-12-lead-arrhythmia-database-1.0.0/files'
 RESULT_DIR = './data'
 os.makedirs(RESULT_DIR, exist_ok=True)
 
-# Automatic classification of heartbeats using ECG morphology and heartbeat interval features
 # Train set
 DS_1 = [f'I{i:02d}' for i in range(1, 38)]
 # Test set
@@ -30,7 +29,7 @@ AAMI_classes['VEB'] = ['V', 'E']
 AAMI_classes['F'] = ['F']
 AAMI_classes['Q'] = ['P', '/', 'f', 'u']
 
-MITBIH_BEAT_INDEX = {
+STPB_BEAT_INDEX = {
     0: "N",
     1: "SVEB",
     2: "VEB",
@@ -45,13 +44,12 @@ def get_beat_idx(label):
             return class_idx
     return 0 # if label not in any beat_classes -> return 0 (normal)
 
-
-def build_label_dict(label_indices, locations):
-    label_dict = {}
+def build_label_array(label_indices, locations):
+    label_array = [np.array([]) for _ in range(len(STPB_BEAT_INDEX))]
     for label in np.unique(label_indices):
         label_idx = locations[label == label_indices]
-        label_dict[label] = label_idx
-    return label_dict
+        label_array[label] = label_idx
+    return label_array
 
 result_dict = {}
 for set_key, set_pids in DS.items():
@@ -87,12 +85,12 @@ for set_key, set_pids in DS.items():
             else:
                 label = 0
 
-            label_dict = build_label_dict(beat_label_indices, beat_locations)
+            label_array = build_label_array(beat_label_indices, beat_locations)
 
             y = {
                 'pid': pid,
                 'y': label,
-                'y_raw': label_dict
+                'y_raw': label_array
             }
 
             X.append(x)

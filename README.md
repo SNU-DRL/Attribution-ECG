@@ -19,11 +19,22 @@ Original source: [Icentia11k: An Unsupervised ECG Representation Learning Datase
 2. MIT-BIH Arrhythmia Database
 Original source: [MIT-BIH Arrhythmia Database](https://www.physionet.org/content/mitdb/1.0.0/)
 ```
+    cd data
     wget https://physionet.org/static/published-projects/mitdb/mit-bih-arrhythmia-database-1.0.0.zip
     unzip mit-bih-arrhythmia-database-1.0.0.zip
+    cd ..
     python build_mitbih_dataset.py
 ```
 
+3. St Petersburg INCART 12-lead Arrhythmia Database
+Original source: [St Petersburg INCART 12-lead Arrhythmia Database](https://physionet.org/content/incartdb/1.0.0/)
+```
+    cd data
+    wget https://physionet.org/static/published-projects/incartdb/st-petersburg-incart-12-lead-arrhythmia-database-1.0.0.zip
+    unzip st-petersburg-incart-12-lead-arrhythmia-database-1.0.0.zip -d st-petersburg-incart-12-lead-arrhythmia-database-1.0.0
+    cd ..
+    python build_st-petersburg_dataset.py
+```
 
 ## How to use
 ### Requirements
