@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih"]
+        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih", "st-petersburg"]
     )
     parser.add_argument(
         "--dataset_path", default="./data/12000_btype_new.pkl", type=str

@@ -1,18 +1,18 @@
 # Dataset
-DATASET=mit-bih
-DATASET_PATH=./data/mit-bih.pkl
+DATASET=st-petersburg
+DATASET_PATH=./data/st-petersburg.pkl
 
 # Model
 MODEL=resnet18_7
 
 # Hyperparameters
 BATCH_SIZE=32
-LEARNING_RATE=5e-2
+LEARNING_RATE=1e-3
 WEIGHT_DECAY=1e-4
 EPOCHS=20
 
 # Settings
-GPU_NUM=1
+GPU_NUM=0
 
 RESULT_BASE_DIR='results/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 

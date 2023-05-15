@@ -15,7 +15,6 @@ DATA_DIR = './data/mit-bih-arrhythmia-database-1.0.0'
 RESULT_DIR = './data'
 os.makedirs(RESULT_DIR, exist_ok=True)
 
-# Automatic classification of heartbeats using ECG morphology and heartbeat interval features
 # Train set
 DS_1 = [101, 106, 108, 109, 112, 114, 115, 116, 118, 119, 122, 124, 201, 203, 205, 207, 208, 209, 215, 220, 223, 230]
 # Test set
