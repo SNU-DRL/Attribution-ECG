@@ -29,7 +29,7 @@ def main(args):
     # evaluate feature attribution methods
     # metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, args.absolute)
     for absolute in [True, False]:
-        result_filename = f"{args.result_dir}/{args.attribution}_absolute.csv" if absolute else f"{args.result_dir}/{args.attribution}.csv"
+        result_filename = f"{args.result_dir}/result_absolute.csv" if absolute else f"{args.result_dir}/result.csv"
         eval_result_dict = {}
         for eval_metric in EVALUATION_METRICS.keys():
             metric_result = evaluate_attribution(eval_metric, eval_attr_data, attr_list, model, device, absolute)
@@ -81,7 +81,6 @@ if __name__ == "__main__":
     args_dict.update(vars(args))
     args = argparse.Namespace(**args_dict)
     
-    args.attribution = os.path.split(args.attr_dir)[-1]
     args.vis_dir = f"{args.result_dir}/vis"
     
     main(args)

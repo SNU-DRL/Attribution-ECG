@@ -10,7 +10,7 @@ EPOCHS=20
 BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 # Settings
-GPU_NUM=0
+GPU_NUM=9
 
 mkdir results_eval_230516
 
@@ -30,4 +30,6 @@ do
             --seed $SEED \
             --result_dir $RESULT_DIR
     done
+    python process_evaluation_results.py results_eval_230516/$BASE_DIR
+
 done
