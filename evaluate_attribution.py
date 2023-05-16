@@ -35,7 +35,7 @@ def main(args):
             metric_result = evaluate_attribution(eval_metric, eval_attr_data, attr_list, model, device, absolute)
             eval_result_dict[eval_metric] = metric_result
         eval_result_series = pd.Series(eval_result_dict)
-        eval_result_series.to_csv(result_filename, header=["metric", "value"])
+        eval_result_series.to_csv(result_filename, header=False)
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
