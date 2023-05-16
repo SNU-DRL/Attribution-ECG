@@ -27,9 +27,16 @@ def main(args):
         visualize(args.dataset, eval_attr_data, attr_list, args.vis_dir, args.n_samples_vis)
 
     # evaluate feature attribution methods
-    metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, args.absolute)
-    print(f"Final result: {metric_result:.4f}")
-
+    # metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, args.absolute)
+    for absolute in [True, False]:
+        result_filename = f"{args.result_dir}/{args.attribution}_absolute.csv" if absolute else f"{args.result_dir}/{args.attribution}.csv"
+        eval_result_dict = {}
+        for eval_metric in EVALUATION_METRICS.keys():
+            metric_result = evaluate_attribution(eval_metric, eval_attr_data, attr_list, model, device, absolute)
+            eval_result_dict[eval_metric] = metric_result
+        eval_result_series = pd.Series(eval_result_dict)
+        eval_result_series.to_csv(result_filename, header=["metric", "value"])
+        
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Evaluating feature attribution methods"
@@ -44,10 +51,10 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", default="./result/model_last.pt", type=str)
 
     # Evaluation metric
-    parser.add_argument(
-        "--eval_metric", default="attribution_localization", type=str, choices=EVALUATION_METRICS.keys()
-    )
-    parser.add_argument("--absolute", action="store_true")
+    # parser.add_argument(
+    #     "--eval_metric", default="attribution_localization", type=str, choices=EVALUATION_METRICS.keys()
+    # )
+    # parser.add_argument("--absolute", action="store_true")
     
     # Settings
     parser.add_argument(
@@ -59,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("--visualize", action="store_true")
     parser.add_argument(
         "--n_samples_vis",
-        default=30,
+        default=20,
         type=int,
         help="number of samples for visualization",
     )
@@ -74,6 +81,7 @@ if __name__ == "__main__":
     args_dict.update(vars(args))
     args = argparse.Namespace(**args_dict)
     
+    args.attribution = os.path.split(args.attr_dir)[-1]
     args.vis_dir = f"{args.result_dir}/vis"
     
     main(args)

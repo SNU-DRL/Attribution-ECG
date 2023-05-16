@@ -48,7 +48,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Evaluating feature attribution methods"
+        description="Computing feature attribution"
     )
 
     # Dataset
