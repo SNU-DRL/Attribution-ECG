@@ -25,7 +25,7 @@ def evaluate_attribution(eval_metric, data_dict, attr_list, model, device, absol
     a_batch = np.concatenate(attr_list)
     s_batch = np.array(list(map(build_segment_array, zip(data_dict["x"], data_dict["y"], data_dict["beat_spans"]))))
 
-    if eval_metric == "attribution_localization" and not absolute:
+    if eval_metric in ["attribution_localization", "relevance_mass_accuracy"] and not absolute:
         a_batch = np.clip(a_batch, 0, None)
     
     metric_results = metric(model, x_batch, y_batch, a_batch, s_batch, channel_first=True, device=device)
