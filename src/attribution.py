@@ -1,6 +1,7 @@
+import math
+
 import numpy as np
 import torch
-import torch.nn.functional as F
 from captum.attr import (LRP, DeepLift, DeepLiftShap, GuidedBackprop,
                          GuidedGradCam, InputXGradient, IntegratedGradients,
                          KernelShap, LayerAttribution, LayerGradCam, Lime,
@@ -27,7 +28,7 @@ class Attribution:
     Apply feature attribution method to a sample (x, y)
     """
 
-    def __init__(self, model, attr_method, n_samples=200):
+    def __init__(self, model, attr_method, n_samples, feature_mask_size):
         self.model = model
         self.attr_method = attr_method
         if attr_method == "random_baseline":
@@ -39,6 +40,7 @@ class Attribution:
         else:
             self.attr_func = ATTRIBUTION_METHODS[attr_method](model)
         self.n_samples = n_samples
+        self.feature_mask_size = feature_mask_size
 
     def apply(self, x, y) -> np.ndarray:
         if self.attr_method == "random_baseline":
@@ -47,7 +49,10 @@ class Attribution:
         elif self.attr_method == "saliency":
             attr_x = self.attr_func.attribute(x, target=y, abs=False)
         elif self.attr_method in ["lime", "kernel_shap"]:
-            attr_x = self.attr_func.attribute(x, target=y, n_samples=self.n_samples)
+            num_feature_mask_elements = math.ceil(x.shape[-1] / self.feature_mask_size)
+            feature_mask = np.repeat(np.arange(num_feature_mask_elements), self.feature_mask_size)
+            feature_mask = feature_mask[:x.shape[-1]].reshape(1, 1, 1, -1)            
+            attr_x = self.attr_func.attribute(x, target=y, n_samples=self.n_samples, feature_mask=torch.tensor(feature_mask, device=x.device))
         elif self.attr_method == "deep_shap":
             attr_x = self.attr_func.attribute(
                 x,

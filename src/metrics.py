@@ -18,7 +18,7 @@ EVALUATION_METRICS = {
 
 def evaluate_attribution(eval_metric, data_dict, attr_list, model, device, absolute):
     model.eval()
-    metric = EVALUATION_METRICS[eval_metric](abs=absolute, display_progressbar=True)
+    metric = EVALUATION_METRICS[eval_metric](abs=absolute, display_progressbar=True, disable_warnings=True)
 
     x_batch = np.array(data_dict["x"])
     y_batch = np.array(data_dict["y"])

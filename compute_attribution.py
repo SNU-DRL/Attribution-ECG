@@ -30,7 +30,7 @@ def main(args):
     model.eval()
     model.to(device)
     
-    attribution = Attribution(model, args.attr_method, args.n_samples)
+    attribution = Attribution(model, args.attr_method, args.n_samples, args.feature_mask_size)
 
     attr_list = []
     for idx in tqdm(range(eval_attr_data["length"])):
@@ -77,6 +77,12 @@ if __name__ == "__main__":
         default=500,
         type=int,
         help="number of samples used for lime / kernel_shap",
+    )
+    parser.add_argument(
+        "--feature_mask_size",
+        default=16,
+        type=int,
+        help="size of a feature mask used for lime / kernel_shap",
     )
 
     # Settings

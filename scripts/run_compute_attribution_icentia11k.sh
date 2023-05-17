@@ -14,6 +14,7 @@ BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'
 PROB_THRESHOLD=0.9
 # ATTR_METHOD=gradcam
 N_SAMPLES=500
+FEATURE_MASK_SIZE=16
 
 # Settings
 GPU_NUM=0
@@ -35,6 +36,7 @@ do
             --prob_threshold $PROB_THRESHOLD \
             --attr_method $ATTR_METHOD \
             --n_samples $N_SAMPLES \
+            --feature_mask_size $FEATURE_MASK_SIZE \
             --gpu_num $GPU_NUM \
             --seed $SEED \
             --result_dir $RESULT_DIR
