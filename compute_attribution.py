@@ -30,7 +30,7 @@ def main(args):
     model.eval()
     model.to(device)
     
-    attribution = Attribution(model, args.attr_method, args.n_samples, args.feature_mask_size)
+    attribution = Attribution(model, args.attr_method, args.n_samples, args.feature_mask_size, eval_attr_data["x"][0].shape[-1], device)
 
     attr_list = []
     for idx in tqdm(range(eval_attr_data["length"])):
