@@ -23,9 +23,6 @@ def main(args):
     eval_attr_data = pickle.load(gzip.GzipFile(f"{args.attr_dir}/eval_attr_data.pkl", "rb"))
     attr_list = pickle.load(gzip.GzipFile(f"{args.attr_dir}/attr_list.pkl", "rb"))
 
-    if args.visualize:
-        visualize(args.dataset, eval_attr_data, attr_list, args.vis_dir, args.n_samples_vis)
-
     # evaluate feature attribution methods
     # metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, args.absolute)
     for absolute in [True, False]:
@@ -36,6 +33,9 @@ def main(args):
             eval_result_dict[eval_metric] = metric_result
         eval_result_series = pd.Series(eval_result_dict)
         eval_result_series.to_csv(result_filename, header=False)
+        
+        if args.visualize:
+            visualize(args.dataset, eval_attr_data, attr_list, absolute, args.vis_dir, args.n_samples_vis)
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

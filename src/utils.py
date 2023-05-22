@@ -88,13 +88,15 @@ def extract_beats(y_raw, dataset):
     return label_dict
 
 
-def visualize(dataset, data_dict, attr_list, vis_dir, n_samples_vis):
+def visualize(dataset, data_dict, attr_list, absolute, vis_dir, n_samples_vis):
     os.makedirs(vis_dir, exist_ok=True)
     sample_indices = random.sample(range(data_dict["length"]), n_samples_vis)
 
     for idx in tqdm(sample_indices):
         x, y, beat_spans, prob = data_dict["x"][idx], int(data_dict["y"][idx]), data_dict["beat_spans"][idx], data_dict["prob"][idx]
         attr_x = attr_list[idx]
+        if absolute:
+            attr_x = np.absolute(attr_x)
         vis_path = f"{vis_dir}/label{y}_prob{prob:.6f}_id{idx}.png"
         plot_attribution(x, y, beat_spans, prob, attr_x, dataset, vis_path)
 
