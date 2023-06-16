@@ -1,10 +1,10 @@
 import argparse
+import csv
+import gzip
 import json
 import os
 import pickle
-import gzip
 
-import pandas as pd
 import torch
 
 from src.metrics import EVALUATION_METRICS, evaluate_attribution
@@ -24,19 +24,28 @@ def main(args):
     attr_list = pickle.load(gzip.GzipFile(f"{args.attr_dir}/attr_list.pkl", "rb"))
 
     # evaluate feature attribution methods
-    # metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, args.absolute)
-    for absolute in [True, False]:
-        result_filename = f"{args.result_dir}/result_absolute.csv" if absolute else f"{args.result_dir}/result.csv"
-        eval_result_dict = {}
-        for eval_metric in EVALUATION_METRICS.keys():
-            metric_result = evaluate_attribution(eval_metric, eval_attr_data, attr_list, model, device, absolute)
-            eval_result_dict[eval_metric] = metric_result
-        eval_result_series = pd.Series(eval_result_dict)
-        eval_result_series.to_csv(result_filename, header=False)
-        
-        if args.visualize:
-            visualize(args.dataset, eval_attr_data, attr_list, absolute, args.vis_dir, args.n_samples_vis)
-        
+    metric_kwargs = {
+        "abs": args.absolute,
+    }
+    additional_metric_kwargs = {}
+    if args.eval_metric in ["region_perturbation"]:
+        additional_metric_kwargs.update({"patch_size": args.patch_size})
+    if args.eval_metric in ["region_perturbation"]:
+        additional_metric_kwargs.update({"order": args.perturb_order})
+    metric_kwargs.update(additional_metric_kwargs)
+    
+    metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, metric_kwargs)
+    result_file = f"{args.result_dir}/results_absolute.csv" if args.absolute else f"{args.result_dir}/results.csv"
+    result_row_name = args.eval_metric + '_' + '_'.join([key+'_'+str(value) for key, value in additional_metric_kwargs.items()]) if additional_metric_kwargs else args.eval_metric
+    result_row = [result_row_name, metric_result]
+    with open(result_file, "a") as f:
+        writer = csv.writer(f)
+        writer.writerow(result_row)
+
+    if args.visualize:
+        visualize(args.dataset, eval_attr_data, attr_list, args.absolute, args.vis_dir, args.n_samples_vis)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Evaluating feature attribution methods"
@@ -51,10 +60,16 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", default="./result/model_last.pt", type=str)
 
     # Evaluation metric
-    # parser.add_argument(
-    #     "--eval_metric", default="attribution_localization", type=str, choices=EVALUATION_METRICS.keys()
-    # )
-    # parser.add_argument("--absolute", action="store_true")
+    parser.add_argument(
+        "--eval_metric", default="attribution_localization", type=str, choices=EVALUATION_METRICS.keys()
+    )
+    parser.add_argument("--absolute", action="store_true")
+    parser.add_argument(
+        "--patch_size", default=16, type=int, help="size of a patch size for perturbation",
+    )
+    parser.add_argument(
+        "--perturb_order", default="morf", type=str, choices=["morf", "lerf"], help="size of a patch size for perturbation",
+    )
     
     # Settings
     parser.add_argument(

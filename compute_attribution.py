@@ -53,10 +53,10 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih", "st-petersburg"]
+        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih", "st-petersburg", "mit-bih_svdb"]
     )
     parser.add_argument(
-        "--dataset_path", default="./data/12000_btype_new.pkl", type=str
+        "--dataset_path", default="./dataset/data/icentia11k.pkl", type=str
     )
 
     # Model

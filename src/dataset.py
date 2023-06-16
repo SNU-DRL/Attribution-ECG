@@ -36,7 +36,7 @@ class ECG_DataModule:
                 x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=self.seed
             )
 
-        elif dataset in ["mit-bih", "st-petersburg"]:
+        elif dataset in ["mit-bih", "st-petersburg", "mit-bih_svdb"]:
             data_dict = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
             train_set, test_set = data_dict["train"], data_dict["test"]
             x_train = np.expand_dims(preprocess(train_set["X"]), axis=(1,2))

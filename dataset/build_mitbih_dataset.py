@@ -1,55 +1,26 @@
-# https://physionet.org/content/incartdb/1.0.0/
+# https://www.physionet.org/content/mitdb/1.0.0/
 
 import gzip
 import os
 import pickle
-from collections import OrderedDict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import wfdb
 from tqdm import tqdm
 
+from utils import build_label_array, get_beat_idx
+
 WINDOW_SECONDS = 8
-DATA_DIR = './data/st-petersburg-incart-12-lead-arrhythmia-database-1.0.0/files'
+DATA_DIR = './mit-bih-arrhythmia-database-1.0.0'
 RESULT_DIR = './data'
 os.makedirs(RESULT_DIR, exist_ok=True)
 
 # Train set
-DS_1 = [f'I{i:02d}' for i in range(1, 38)]
+DS_1 = [101, 106, 108, 109, 112, 114, 115, 116, 118, 119, 122, 124, 201, 203, 205, 207, 208, 209, 215, 220, 223, 230]
 # Test set
-DS_2 = [f'I{i:02d}' for i in range(38, 76)]
+DS_2 = [100, 103, 105, 111, 113, 117, 121, 123, 200, 202, 210, 212, 213, 214, 219, 221, 222, 228, 231, 232, 233, 234]
 
 DS = {"train": DS_1, "test": DS_2}
-
-AAMI_classes = OrderedDict()
-AAMI_classes['N'] = ['N', 'L', 'R']
-AAMI_classes['SVEB'] = ['A', 'a', 'J', 'S', 'e', 'j']
-AAMI_classes['VEB'] = ['V', 'E']
-AAMI_classes['F'] = ['F']
-AAMI_classes['Q'] = ['P', '/', 'f', 'u']
-
-STPB_BEAT_INDEX = {
-    0: "N",
-    1: "SVEB",
-    2: "VEB",
-    3: "F",
-    4: "Q"
-}
-
-
-def get_beat_idx(label):
-    for class_idx, beat_classes in enumerate(AAMI_classes.values()):
-        if label in beat_classes:
-            return class_idx
-    return 0 # if label not in any beat_classes -> return 0 (normal)
-
-def build_label_array(label_indices, locations):
-    label_array = [np.array([]) for _ in range(len(STPB_BEAT_INDEX))]
-    for label in np.unique(label_indices):
-        label_idx = locations[label == label_indices]
-        label_array[label] = label_idx
-    return label_array
 
 result_dict = {}
 for set_key, set_pids in DS.items():
@@ -68,7 +39,7 @@ for set_key, set_pids in DS.items():
             window_start = i * window_size
             window_end = window_start + window_size
         
-            x = recording[window_start:window_end, 1] # use lead II
+            x = recording[window_start:window_end, 0] # use lead II
 
             beat_location_indices = ((window_start <= attr.sample) & (attr.sample < window_end)).nonzero()[0]
             beat_locations = attr.sample[beat_location_indices] - window_start
@@ -100,5 +71,5 @@ for set_key, set_pids in DS.items():
 
     result_dict[set_key] = {"X": X, "Y": Y}
 
-with gzip.open(f'{RESULT_DIR}/st-petersburg.pkl', 'wb') as f:
+with gzip.open(f'{RESULT_DIR}/mit-bih.pkl', 'wb') as f:
     pickle.dump(result_dict, f)

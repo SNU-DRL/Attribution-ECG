@@ -1,22 +1,20 @@
 # Dataset
-DATASET=mit-bih
-DATASET_PATH=./data/mit-bih.pkl
+DATASET=mit-bih_svdb
+DATASET_PATH=./dataset/data/$DATASET.pkl
 
 # Model
 MODEL=resnet18_7
 
 # Hyperparameters
 BATCH_SIZE=32
-LEARNING_RATE=5e-2
+LEARNING_RATE=1e-2
 WEIGHT_DECAY=1e-4
 EPOCHS=20
 
 # Settings
 GPU_NUM=0
 
-RESULT_BASE_DIR='results/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
-
-mkdir results
+RESULT_BASE_DIR='results_training/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 for SEED in 1 2 3 4 5
 do

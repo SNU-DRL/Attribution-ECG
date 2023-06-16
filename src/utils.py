@@ -45,6 +45,16 @@ LABEL_MAPPING = {
         },
         "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
     },
+    "mit-bih_svdb": {
+        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
+        "LABEL_INDEX": {
+            0: "N",
+            1: "SVEB",
+            2: "VEB",
+            3: "F",
+        },
+        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
+    },
 }
 
 

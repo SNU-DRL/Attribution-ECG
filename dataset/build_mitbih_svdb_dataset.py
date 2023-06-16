@@ -3,12 +3,12 @@
 import gzip
 import os
 import pickle
-from collections import OrderedDict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import wfdb
 from tqdm import tqdm
+
+from utils import build_label_array, get_beat_idx
 
 WINDOW_SECONDS = 8
 DATA_DIR = './mit-bih-supraventricular-arrhythmia-database-1.0.0'
@@ -32,38 +32,6 @@ DS_2 = [
 ]
 
 DS = {"train": DS_1, "test": DS_2}
-
-MITBIH_classes = ['N', 'L', 'R', 'e', 'j', 'A', 'a', 'J', 'S', 'V', 'E', 'F']#, 'P', '/', 'f', 'u']
-
-AAMI_classes = OrderedDict()
-AAMI_classes['N'] = ['N', 'L', 'R']
-AAMI_classes['SVEB'] = ['A', 'a', 'J', 'S', 'e', 'j']
-AAMI_classes['VEB'] = ['V', 'E']
-AAMI_classes['F'] = ['F']
-AAMI_classes['Q'] = ['P', '/', 'f', 'u']
-
-MITBIH_BEAT_INDEX = {
-    0: "N",
-    1: "SVEB",
-    2: "VEB",
-    3: "F",
-    4: "Q"
-}
-
-
-def get_beat_idx(label):
-    for class_idx, beat_classes in enumerate(AAMI_classes.values()):
-        if label in beat_classes:
-            return class_idx
-    return 0 # if label not in any beat_classes -> return 0 (normal)
-
-
-def build_label_dict(label_indices, locations):
-    label_dict = {}
-    for label in np.unique(label_indices):
-        label_idx = locations[label == label_indices]
-        label_dict[label] = label_idx
-    return label_dict
 
 result_dict = {}
 for set_key, set_pids in DS.items():
@@ -99,12 +67,12 @@ for set_key, set_pids in DS.items():
             else:
                 label = 0
 
-            label_dict = build_label_dict(beat_label_indices, beat_locations)
+            label_array = build_label_array(beat_label_indices, beat_locations)
 
             y = {
                 'pid': pid,
                 'y': label,
-                'y_raw': label_dict
+                'y_raw': label_array
             }
 
             X.append(x)
@@ -114,5 +82,5 @@ for set_key, set_pids in DS.items():
 
     result_dict[set_key] = {"X": X, "Y": Y}
 
-with gzip.open(f'{RESULT_DIR}/svdb.pkl', 'wb') as f:
+with gzip.open(f'{RESULT_DIR}/mit-bih_svdb.pkl', 'wb') as f:
     pickle.dump(result_dict, f)
