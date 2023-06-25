@@ -46,11 +46,8 @@ def evaluate_attribution(eval_metric, data_dict, attr_list, model, device, metri
         a_batch = np.clip(a_batch, 0, None)
     
     metric_results = metric(model, x_batch, y_batch, a_batch, s_batch, channel_first=True, device=device)
-
-    if metric_kwargs.get("order") == "lerf":
-        return 1- np.nanmean(metric_results)
-    else:
-        return np.nanmean(metric_results)
+    
+    return np.nanmean(metric_results)
         
 def build_segment_array(input_tuples):
     x, y, beat_spans = input_tuples

@@ -1,5 +1,5 @@
 # Dataset
-DATASET=icentia11k
+DATASET=st-petersburg
 
 # Model
 MODEL=resnet18_7
@@ -13,7 +13,7 @@ BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'
 PATCH_SIZE=16 # for region_perturbation, selectivity
 
 # Settings
-GPU_NUM=6
+GPU_NUM=8
 
 for ATTR_METHOD in gradcam random_baseline input_gradient saliency guided_backprop integrated_gradients deep_lift deep_shap lrp guided_gradcam lime kernel_shap
 do
