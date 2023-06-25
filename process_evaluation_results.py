@@ -20,7 +20,7 @@ os.makedirs(RESULTS_BASE_PATH, exist_ok=True)
 methods = os.listdir(result_dirs[0])
 
 for method in methods:
-    for filename in ["result.csv", "result_absolute.csv"]:
+    for filename in ["results.csv", "results_absolute.csv"]:
         try:
             # aggregate results
             series_list = []

@@ -1,12 +1,11 @@
 import os
 import sys
-from glob import glob
 
 import pandas as pd
 
 if len(sys.argv) != 2:
     print(
-        "Usage (needs one argument): python process_evaluation_results.py ./results_eval/resnet18_7_bs128_lr1e-3_wd1e-4_ep30"
+        "Usage (needs one argument): python process_final_results.py ./results_eval/resnet18_7_bs128_lr1e-3_wd1e-4_ep30"
     )
     sys.exit()
     
@@ -16,8 +15,8 @@ attr_methods = [
 ]
 result_files = []
 for attr_method in attr_methods:
-    result_files.append(f"{attr_method}_result.csv")
-    result_files.append(f"{attr_method}_result_absolute.csv")
+    result_files.append(f"{attr_method}_results.csv")
+    result_files.append(f"{attr_method}_results_absolute.csv")
     
 metrics = ["attribution_localization", "auc", "pointing_game", "relevance_mass_accuracy", "relevance_rank_accuracy", "top_k_intersection"]
 df_columns = []
@@ -40,4 +39,4 @@ for result_file in result_files:
 for metric in metrics:
     total_result_df[f"{metric}_rank"] = total_result_df[f"{metric}_mean"].rank(ascending=False).astype(int)
 
-total_result_df.to_csv(os.path.join(RESULTS_BASE_PATH, "_final_result.csv"))
+total_result_df.to_csv(os.path.join(RESULTS_BASE_PATH, "_final_results.csv"))

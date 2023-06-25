@@ -1,6 +1,6 @@
 # Dataset
-DATASET=icentia11k
-DATASET_PATH=./data/12000_btype_new.pkl
+DATASET=st-petersburg
+DATASET_PATH=./dataset/data/$DATASET.pkl
 
 # Model
 MODEL=resnet18_7
@@ -14,9 +14,7 @@ EPOCHS=20
 # Settings
 GPU_NUM=0
 
-RESULT_BASE_DIR='results/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
-
-mkdir results
+RESULT_BASE_DIR='results_training/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 for SEED in 1 2 3 4 5
 do

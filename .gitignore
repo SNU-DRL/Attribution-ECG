@@ -1,6 +1,6 @@
 # For this project
 *.ipynb
-data*/
+data/
 result*/
 old/
 *.pkl
