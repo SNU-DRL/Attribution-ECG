@@ -1,15 +1,12 @@
+import numpy as np
+from quantus.helpers.utils import calculate_auc
 from quantus.metrics.localisation.attribution_localisation import AttributionLocalisation
 from quantus.metrics.localisation.auc import AUC
 from quantus.metrics.localisation.pointing_game import PointingGame
 from quantus.metrics.localisation.relevance_mass_accuracy import RelevanceMassAccuracy
 from quantus.metrics.localisation.relevance_rank_accuracy import RelevanceRankAccuracy
 from quantus.metrics.localisation.top_k_intersection import TopKIntersection
-
-from Quantus.quantus.metrics.faithfulness.region_perturbation import RegionPerturbation
-
-from quantus.helpers.utils import calculate_auc
-
-import numpy as np
+from quantus.metrics.faithfulness.region_perturbation import RegionPerturbation
 
 EVALUATION_METRICS = {
     "attribution_localization": AttributionLocalisation,
