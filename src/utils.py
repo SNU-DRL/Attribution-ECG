@@ -6,6 +6,36 @@ import numpy as np
 from tqdm import tqdm
 
 LABEL_MAPPING = {
+    "mitdb": {
+        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
+        "LABEL_INDEX": {
+            0: "N",
+            1: "SVEB",
+            2: "VEB",
+            3: "F",
+        },
+        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
+    },
+    "svdb": {
+        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
+        "LABEL_INDEX": {
+            0: "N",
+            1: "SVEB",
+            2: "VEB",
+            3: "F",
+        },
+        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
+    },
+    "incartdb": {
+        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
+        "LABEL_INDEX": {
+            0: "N",
+            1: "SVEB",
+            2: "VEB",
+            3: "F",
+        },
+        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
+    },
     "icentia11k": {
         "BEAT_INDEX": {
             0: "undefined",  # Undefined
@@ -24,36 +54,6 @@ LABEL_MAPPING = {
             "pac": 1,
             "pvc": 2,
         },
-    },
-    "mit-bih": {
-        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
-        "LABEL_INDEX": {
-            0: "N",
-            1: "SVEB",
-            2: "VEB",
-            3: "F",
-        },
-        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
-    },
-    "st-petersburg": {
-        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
-        "LABEL_INDEX": {
-            0: "N",
-            1: "SVEB",
-            2: "VEB",
-            3: "F",
-        },
-        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
-    },
-    "mit-bih_svdb": {
-        "BEAT_INDEX": {0: "N", 1: "SVEB", 2: "VEB", 3: "F", 4: "Q"},
-        "LABEL_INDEX": {
-            0: "N",
-            1: "SVEB",
-            2: "VEB",
-            3: "F",
-        },
-        "LABEL_INDEX_REVERSE": {"N": 0, "SVEB": 1, "VEB": 2, "F": 3},
     },
 }
 

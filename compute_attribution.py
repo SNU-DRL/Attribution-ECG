@@ -53,14 +53,14 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih", "st-petersburg", "mit-bih_svdb"]
+        "--dataset", default="icentia11k", type=str, choices=["mitdb", "svdb", "incartdb", "icentia11k"]
     )
     parser.add_argument(
         "--dataset_path", default="./dataset/data/icentia11k.pkl", type=str
     )
 
     # Model
-    parser.add_argument("--model_path", default="./result/model_last.pt", type=str)
+    parser.add_argument("--model_path", default="./result_train/model_last.pt", type=str)
 
     # Feature attribution method
     parser.add_argument(

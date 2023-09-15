@@ -30,7 +30,6 @@ def main(args):
     additional_metric_kwargs = {}
     if args.eval_metric in ["region_perturbation"]:
         additional_metric_kwargs.update({"patch_size": args.patch_size})
-    if args.eval_metric in ["region_perturbation"]:
         additional_metric_kwargs.update({"order": args.perturb_order})
     metric_kwargs.update(additional_metric_kwargs)
     
@@ -57,19 +56,22 @@ if __name__ == "__main__":
     )
     
     # Model
-    parser.add_argument("--model_path", default="./result/model_last.pt", type=str)
+    parser.add_argument("--model_path", default="./result_train/model_last.pt", type=str)
 
     # Evaluation metric
     parser.add_argument(
         "--eval_metric", default="attribution_localization", type=str, choices=EVALUATION_METRICS.keys()
     )
     parser.add_argument("--absolute", action="store_true")
+    
+    ### For --eval_metric == region_perturbation
     parser.add_argument(
         "--patch_size", default=16, type=int, help="size of a patch size for perturbation",
     )
     parser.add_argument(
         "--perturb_order", default="morf", type=str, choices=["morf", "lerf"], help="size of a patch size for perturbation",
     )
+    ###
     
     # Settings
     parser.add_argument(

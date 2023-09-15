@@ -43,4 +43,4 @@ do
     done
 done
 
-python process_evaluation_results.py results_evaluation/$BASE_DIR
+python analysis/summarize_evaluation.py results_evaluation/$BASE_DIR

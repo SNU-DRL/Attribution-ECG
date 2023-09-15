@@ -11,7 +11,7 @@ from tqdm import tqdm
 from utils import build_label_array, get_beat_idx
 
 WINDOW_SECONDS = 8
-DATA_DIR = './mit-bih-supraventricular-arrhythmia-database-1.0.0'
+DATA_DIR = './source/mit-bih-supraventricular-arrhythmia-database-1.0.0'
 RESULT_DIR = './data'
 os.makedirs(RESULT_DIR, exist_ok=True)
 
@@ -82,5 +82,5 @@ for set_key, set_pids in DS.items():
 
     result_dict[set_key] = {"X": X, "Y": Y}
 
-with gzip.open(f'{RESULT_DIR}/mit-bih_svdb.pkl', 'wb') as f:
+with gzip.open(f'{RESULT_DIR}/svdb.pkl', 'wb') as f:
     pickle.dump(result_dict, f)

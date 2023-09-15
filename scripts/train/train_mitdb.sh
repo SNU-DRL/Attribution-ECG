@@ -1,5 +1,5 @@
 # Dataset
-DATASET=mit-bih
+DATASET=mitdb
 DATASET_PATH=./dataset/data/$DATASET.pkl
 
 # Model
@@ -33,4 +33,4 @@ do
         --result_dir $RESULT_DIR
 done
 
-python process_training_results.py $RESULT_BASE_DIR
+python analysis/summarize_training.py $RESULT_BASE_DIR

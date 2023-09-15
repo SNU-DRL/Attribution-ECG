@@ -1,5 +1,5 @@
 # Dataset
-DATASET=mit-bih
+DATASET=mitdb
 DATASET_PATH=./dataset/data/$DATASET.pkl
 
 # Model

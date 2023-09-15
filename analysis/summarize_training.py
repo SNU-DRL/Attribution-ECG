@@ -9,7 +9,7 @@ import pandas as pd
 
 if len(sys.argv) != 2:
     print(
-        "Usage (needs one argument): python process_training_results.py ./results/resnet18_7_bs32_lr1e-4_wd1e-4_ep10"
+        "Usage (needs one argument): python summarize_training.py ./result_train/resnet18_7_bs128_lr1e-3_wd1e-4_ep30"
     )
     sys.exit()
 

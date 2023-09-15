@@ -5,7 +5,7 @@ import pandas as pd
 
 if len(sys.argv) != 2:
     print(
-        "Usage (needs one argument): python process_final_results.py ./results_eval/resnet18_7_bs128_lr1e-3_wd1e-4_ep30"
+        "Usage (needs one argument): python process_final_results.py ./result_eval/resnet18_7_bs128_lr1e-3_wd1e-4_ep30"
     )
     sys.exit()
     
