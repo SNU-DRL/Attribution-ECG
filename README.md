@@ -1,16 +1,13 @@
 # Evaluating Feature Attribution Methods for Electrocardiogram
-### Under construction!
-
----
 
 This repository contains the code for experiments in our paper, [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
 
-**NOTICE: Our paper is under review as of now, and we are planning to include more details here when our paper is published so other researchers can reproduce our experiments and use our implementation code.**
+**NOTICE: We revised our paper and experimented with more datasets and evaluation metrics. Our revised paper will be uploaded on arXiv soon.**
 
 
 ## How to use
 ### Requirements
-This experiment was tested using the following libraries:
+This experiment was implemented using the following libraries:
 
 - Python 3.10
 - PyTorch 2.0.0
@@ -59,3 +56,20 @@ Please refer to [this](dataset/README.md).
 ```
 - Available evaluation metrics: "attribution_localization", "auc", "pointing_game", "relevance_mass_accuracy", "relevance_rank_accuracy", "top_k_intersection", "region_perturbation"
 - Result: Evaluation results of feature attributions using test samples are saved in the directory specified in `--result_dir` argument.
+
+
+### Conducting experiments using provided scripts
+The scripts necessary for all our experiments are located in the `script` directory.
+To obtain the final results displayed in our paper, please execute the scripts in the following order:
+    - `scripts/train/train_*.sh`
+    - `scripts/compute_attribution/compute_attribution_*.sh`
+    - `scripts/evaluate_attribution/evaluate_attribution_*.sh`
+
+The scripts should be executed in the root of this repository.
+```
+    sh scripts/train/train_icentia11k.sh
+    sh scripts/compute_attribution/compute_attribution_icentia11k.sh
+    sh scripts/evaluate_attribution/evaluate_attribution_icentia11k.sh
+```
+
+Please note that the values of the results may vary slightly if the experiments are run on different machines or different versions of libraries.

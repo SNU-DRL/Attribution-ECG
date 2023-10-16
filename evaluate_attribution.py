@@ -9,7 +9,6 @@ import torch
 
 from src.metrics import EVALUATION_METRICS, evaluate_attribution
 from src.setup import setup
-from src.utils import visualize
 
 
 def main(args):

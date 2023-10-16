@@ -1,19 +1,19 @@
 # Dataset
-DATASET=svdb
+DATASET=icentia11k
 
 # Model
 MODEL=resnet18_7
 BATCH_SIZE=32
-LEARNING_RATE=1e-2
+LEARNING_RATE=1e-3
 WEIGHT_DECAY=1e-4
 EPOCHS=20
 BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 # Evaluation metrics
-PATCH_SIZE=8 # for region_perturbation
+PATCH_SIZE=16 # for region_perturbation
 
 # Settings
-GPU_NUM=9
+GPU_NUM=0
 
 for ATTR_METHOD in gradcam random_baseline input_gradient saliency guided_backprop integrated_gradients deep_lift deep_shap lrp guided_gradcam lime kernel_shap
 do
