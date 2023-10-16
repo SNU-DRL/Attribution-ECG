@@ -61,9 +61,9 @@ Please refer to [this](dataset/README.md).
 ### Conducting experiments using provided scripts
 The scripts necessary for all our experiments are located in the `script` directory.
 To obtain the final results displayed in our paper, please execute the scripts in the following order:
-    - `scripts/train/train_*.sh`
-    - `scripts/compute_attribution/compute_attribution_*.sh`
-    - `scripts/evaluate_attribution/evaluate_attribution_*.sh`
+- `scripts/train/train_*.sh`
+- `scripts/compute_attribution/compute_attribution_*.sh`
+- `scripts/evaluate_attribution/evaluate_attribution_*.sh`
 
 The scripts should be executed in the root of this repository.
 ```
