@@ -3,13 +3,14 @@ import sys
 
 import pandas as pd
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 3:
     print(
-        "Usage (needs one argument): python process_final_results.py ./result_eval/resnet18_7_bs128_lr1e-3_wd1e-4_ep30"
+        "Usage (needs two arguments): python summarize_final_results_region_perturbation.py results_evaluation/icentia11k_resnet18_7_bs32_lr1e-3_wd1e-4_ep20 16"
     )
     sys.exit()
     
 RESULTS_BASE_PATH = sys.argv[1]
+PATCH_SIZE = int(sys.argv[2])
 attr_methods = [
     "random_baseline", "saliency", "input_gradient", "guided_backprop", "integrated_gradients", "deep_lift", "deep_shap", "lrp", "lime", "kernel_shap", "gradcam", "guided_gradcam"
 ]
@@ -18,7 +19,7 @@ for attr_method in attr_methods:
     result_files.append(f"{attr_method}_results.csv")
     result_files.append(f"{attr_method}_results_absolute.csv")
     
-metrics = ["region_perturbation_patch_size_16_order_lerf", "region_perturbation_patch_size_16_order_morf"]
+metrics = [f"region_perturbation_patch_size_{PATCH_SIZE}_order_lerf", f"region_perturbation_patch_size_{PATCH_SIZE}_order_morf"]
 df_columns = []
 for metric in metrics:
     df_columns.append(f"{metric}_mean")
@@ -38,6 +39,5 @@ for result_file in result_files:
 
 total_result_df[f"{metrics[0]}_rank"] = total_result_df[f"{metrics[0]}_mean"].rank(ascending=True).astype(int)
 total_result_df[f"{metrics[1]}_rank"] = total_result_df[f"{metrics[1]}_mean"].rank(ascending=False).astype(int)
-
 
 total_result_df.to_csv(os.path.join(RESULTS_BASE_PATH, "_final_results.csv"))
