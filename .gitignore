@@ -1,11 +1,11 @@
 # For this project
 *.ipynb
 data/
+source/
 result*/
 old/
 *.pkl
 .vscode/
-mit-bih-arrhythmia-database-1.0.0/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

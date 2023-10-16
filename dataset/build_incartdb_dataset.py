@@ -11,7 +11,7 @@ from tqdm import tqdm
 from utils import build_label_array, get_beat_idx
 
 WINDOW_SECONDS = 8
-DATA_DIR = './st-petersburg-incart-12-lead-arrhythmia-database-1.0.0/files'
+DATA_DIR = './source/st-petersburg-incart-12-lead-arrhythmia-database-1.0.0/files'
 RESULT_DIR = './data'
 os.makedirs(RESULT_DIR, exist_ok=True)
 
@@ -71,5 +71,5 @@ for set_key, set_pids in DS.items():
 
     result_dict[set_key] = {"X": X, "Y": Y}
 
-with gzip.open(f'{RESULT_DIR}/st-petersburg.pkl', 'wb') as f:
+with gzip.open(f'{RESULT_DIR}/incartdb.pkl', 'wb') as f:
     pickle.dump(result_dict, f)

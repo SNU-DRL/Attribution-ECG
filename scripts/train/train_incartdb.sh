@@ -1,5 +1,5 @@
 # Dataset
-DATASET=mit-bih_svdb
+DATASET=incartdb
 DATASET_PATH=./dataset/data/$DATASET.pkl
 
 # Model
@@ -7,7 +7,7 @@ MODEL=resnet18_7
 
 # Hyperparameters
 BATCH_SIZE=32
-LEARNING_RATE=1e-2
+LEARNING_RATE=1e-3
 WEIGHT_DECAY=1e-4
 EPOCHS=20
 
@@ -33,4 +33,4 @@ do
         --result_dir $RESULT_DIR
 done
 
-python process_training_results.py $RESULT_BASE_DIR
+python analysis/summarize_training.py $RESULT_BASE_DIR

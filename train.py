@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["icentia11k", "mit-bih", "st-petersburg", "mit-bih_svdb"]
+        "--dataset", default="icentia11k", type=str, choices=["mitdb", "svdb", "incartdb", "icentia11k"]
     )
     parser.add_argument(
         "--dataset_path", default="./dataset/data/icentia11k.pkl", type=str
@@ -52,9 +52,9 @@ if __name__ == "__main__":
     parser.add_argument("--model", default="resnet18_7", type=str)
 
     # Hyperparameters
-    parser.add_argument("--batch_size", default=128, type=int)
+    parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--learning_rate", default=1e-4, type=float)
-    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--epochs", default=20, type=int)
     parser.add_argument("--weight_decay", default=1e-4, type=float)
 
     # Settings
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", default=0, type=int, help="random seed")
 
     # Result
-    parser.add_argument("--result_dir", default="./result", type=str)
+    parser.add_argument("--result_dir", default="./result_train", type=str)
 
     args = parser.parse_args()
     os.makedirs(args.result_dir, exist_ok=True)

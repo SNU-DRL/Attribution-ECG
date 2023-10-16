@@ -1,16 +1,16 @@
 # Dataset
-DATASET=mit-bih
+DATASET=incartdb
 
 # Model
 MODEL=resnet18_7
 BATCH_SIZE=32
-LEARNING_RATE=5e-2
+LEARNING_RATE=1e-3
 WEIGHT_DECAY=1e-4
 EPOCHS=20
 BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 # Settings
-GPU_NUM=6
+GPU_NUM=0
 
 for EVAL_METRIC in attribution_localization auc pointing_game relevance_mass_accuracy relevance_rank_accuracy top_k_intersection
 do
@@ -43,4 +43,4 @@ do
     done
 done
 
-python process_evaluation_results.py results_evaluation/$BASE_DIR
+python analysis/summarize_evaluation.py results_evaluation/$BASE_DIR

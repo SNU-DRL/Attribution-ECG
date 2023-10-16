@@ -43,8 +43,10 @@ class Trainer:
         """
         Parameters
         ----------
-        train_loader :
-        val_loader :
+        train_loader : torch.utils.data.DataLoader
+            Dataloader for training set
+        val_loader : torch.utils.data.DataLoader
+            Dataloader for validation set
         epochs : int
             Number of training epochs.
 

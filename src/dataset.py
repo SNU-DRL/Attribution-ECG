@@ -15,7 +15,7 @@ class ECG_DataModule:
     def __init__(self, dataset: str, dataset_path: str, batch_size: int, seed: int):
         """
         Args:
-            dataset (str): icentia11k OR mit-bih
+            dataset (str): mitdb OR svdb OR incartdb OR icentia11k
             dataset_path (str): path to dataset file
             batch_size (int): batch size for dataloader
             seed (int): random seed
@@ -36,7 +36,7 @@ class ECG_DataModule:
                 x, y, y_raw, train_size=6000, test_size=6000, stratify=y, random_state=self.seed
             )
 
-        elif dataset in ["mit-bih", "st-petersburg", "mit-bih_svdb"]:
+        elif dataset in ["mitdb", "svdb", "incartdb"]:
             data_dict = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
             train_set, test_set = data_dict["train"], data_dict["test"]
             x_train = np.expand_dims(preprocess(train_set["X"]), axis=(1,2))

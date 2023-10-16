@@ -1,5 +1,5 @@
 # Dataset
-DATASET=st-petersburg
+DATASET=icentia11k
 
 # Model
 MODEL=resnet18_7
@@ -10,10 +10,10 @@ EPOCHS=20
 BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 # Evaluation metrics
-PATCH_SIZE=16 # for region_perturbation, selectivity
+PATCH_SIZE=16 # for region_perturbation
 
 # Settings
-GPU_NUM=8
+GPU_NUM=0
 
 for ATTR_METHOD in gradcam random_baseline input_gradient saliency guided_backprop integrated_gradients deep_lift deep_shap lrp guided_gradcam lime kernel_shap
 do
@@ -23,7 +23,7 @@ do
         MODEL_PATH=results_training/$MODEL_DIR/model_last.pt
         ATTR_DIR=results_attribution/$MODEL_DIR/$ATTR_METHOD
 
-        RESULT_DIR=results_evaluation_faithfulness/$MODEL_DIR/$ATTR_METHOD
+        RESULT_DIR=results_evaluation_region_perturbation/$MODEL_DIR/$ATTR_METHOD
         ###
 
         EVAL_METRIC=region_perturbation
@@ -78,4 +78,4 @@ do
     done
 done
 
-python process_evaluation_results.py results_evaluation_faithfulness/$BASE_DIR
+python analysis/summarize_evaluation.py results_evaluation_region_perturbation/$BASE_DIR
