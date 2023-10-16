@@ -67,7 +67,7 @@ if __name__ == "__main__":
         "--prob_threshold",
         default=0.9,
         type=float,
-        help="select samples with higher prediction prob.",
+        help="select samples with high prediction prob.",
     )
     parser.add_argument(
         "--attr_method", default="gradcam", type=str, choices=ATTRIBUTION_METHODS.keys()

@@ -41,10 +41,6 @@ def main(args):
         writer = csv.writer(f)
         writer.writerow(result_row)
 
-    if args.visualize:
-        visualize(args.dataset, eval_attr_data, attr_list, args.absolute, args.vis_dir, args.n_samples_vis)
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Evaluating feature attribution methods"
@@ -66,10 +62,10 @@ if __name__ == "__main__":
     
     ### For --eval_metric == region_perturbation
     parser.add_argument(
-        "--patch_size", default=16, type=int, help="size of a patch size for perturbation",
+        "--patch_size", default=16, type=int, help="size of a patch size for region perturbation",
     )
     parser.add_argument(
-        "--perturb_order", default="morf", type=str, choices=["morf", "lerf"], help="size of a patch size for perturbation",
+        "--perturb_order", default="morf", type=str, choices=["morf", "lerf"], help="order of applying region perturbation",
     )
     ###
     
@@ -80,13 +76,6 @@ if __name__ == "__main__":
     parser.add_argument("--seed", default=0, type=int, help="random seed")
 
     # Result
-    parser.add_argument("--visualize", action="store_true")
-    parser.add_argument(
-        "--n_samples_vis",
-        default=20,
-        type=int,
-        help="number of samples for visualization",
-    )
     parser.add_argument("--result_dir", default="./result_eval", type=str)
     
     args = parser.parse_args()
@@ -97,7 +86,5 @@ if __name__ == "__main__":
         args_dict = json.load(f)
     args_dict.update(vars(args))
     args = argparse.Namespace(**args_dict)
-    
-    args.vis_dir = f"{args.result_dir}/vis"
     
     main(args)
