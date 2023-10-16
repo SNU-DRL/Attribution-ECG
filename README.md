@@ -48,7 +48,7 @@ Please refer to [this](dataset/README.md).
 
 ### Evaluating feature attribution methods
 ```
-    python evaluate_attributions.py
+    python evaluate_attribution.py
         --attr_dir      ./result_attr
         --model_path    ./result_train/model_last.pt
         --eval_metric   attribution_localization
