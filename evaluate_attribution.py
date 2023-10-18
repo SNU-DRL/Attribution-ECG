@@ -9,6 +9,7 @@ import torch
 
 from src.metrics import EVALUATION_METRICS, evaluate_attribution
 from src.setup import setup
+from src.utils import replace_by_zero
 
 
 def main(args):
@@ -30,6 +31,7 @@ def main(args):
     if args.eval_metric in ["region_perturbation"]:
         additional_metric_kwargs.update({"patch_size": args.patch_size})
         additional_metric_kwargs.update({"order": args.perturb_order})
+        additional_metric_kwargs.update({"perturb_func": replace_by_zero})
     metric_kwargs.update(additional_metric_kwargs)
     
     metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, metric_kwargs)
