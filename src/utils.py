@@ -157,9 +157,10 @@ def plot_attribution(x, y, beat_spans, prob, attr_x, dataset, path):
     plt.close()
 
 
-def aggregate_func(evaluation_scores):
+def aggregate_region_perturbation_scores(evaluation_scores):
     results = []
     for i, curve in enumerate(evaluation_scores):
+        curve.insert(0, 0)
         curve = np.array(curve)
         res = calculate_auc(curve)
         res /= (curve.size - 1)

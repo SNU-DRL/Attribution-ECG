@@ -5,11 +5,11 @@ import json
 import os
 import pickle
 
+import numpy as np
 import torch
 
 from src.metrics import EVALUATION_METRICS, evaluate_attribution
 from src.setup import setup
-from src.utils import replace_by_zero
 
 
 def main(args):
@@ -27,20 +27,39 @@ def main(args):
     metric_kwargs = {
         "abs": args.absolute,
     }
-    additional_metric_kwargs = {}
     if args.eval_metric in ["region_perturbation"]:
-        additional_metric_kwargs.update({"patch_size": args.patch_size})
-        additional_metric_kwargs.update({"order": args.perturb_order})
-        additional_metric_kwargs.update({"perturb_func": replace_by_zero})
-    metric_kwargs.update(additional_metric_kwargs)
+        metric_kwargs.update({
+            "patch_size": args.patch_size,
+            "order": args.perturb_order
+        })
+    if args.eval_metric in ["faithfulness_correlation"]:
+        metric_kwargs.update({"subset_size": int(eval_attr_data['x'][0].size * args.subset_ratio)})
+    metric_name = '_'.join([args.eval_metric, args.perturb_order]) if args.eval_metric in ["region_perturbation"] else args.eval_metric
     
-    metric_result = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, metric_kwargs)
+    # save arguments
+    args_file = f"{args.result_dir}/args_absolute_{metric_name}.json" if args.absolute else f"{args.result_dir}/args_{metric_name}.json"
+    args_dict = vars(args)
+    args_dict.update(metric_kwargs)
+    with open(args_file, "w") as f:
+        json.dump(args_dict, f, indent=4)
+    
+    # calculate metric scores
+    metric_scores = evaluate_attribution(args.eval_metric, eval_attr_data, attr_list, model, device, metric_kwargs)
+    metric_result = np.nanmean(metric_scores)
+    
+    # save results
     result_file = f"{args.result_dir}/results_absolute.csv" if args.absolute else f"{args.result_dir}/results.csv"
-    result_row_name = args.eval_metric + '_' + '_'.join([key+'_'+str(value) for key, value in additional_metric_kwargs.items()]) if additional_metric_kwargs else args.eval_metric
-    result_row = [result_row_name, metric_result]
+    result_row = [metric_name, metric_result]
     with open(result_file, "a") as f:
         writer = csv.writer(f)
         writer.writerow(result_row)
+        
+    # save scores
+    scores_file = f"{args.result_dir}/scores_absolute_{metric_name}.csv" if args.absolute else f"{args.result_dir}/scores_{metric_name}.csv"
+    with open(scores_file, "w") as f:
+        csv_writer = csv.writer(f, delimiter="\n")
+        csv_writer.writerow(metric_scores)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -63,10 +82,15 @@ if __name__ == "__main__":
     
     ### For --eval_metric == region_perturbation
     parser.add_argument(
-        "--patch_size", default=16, type=int, help="size of a patch size for region perturbation",
+        "--patch_size", default=16, type=int, help="size of a patch for region perturbation",
     )
     parser.add_argument(
         "--perturb_order", default="morf", type=str, choices=["morf", "lerf"], help="order of applying region perturbation",
+    )
+    ###
+    ### For --eval_metric == faithfulness_correlation
+    parser.add_argument(
+        "--subset_ratio", default=0.1, type=float, help="ratio of a subset for faithfulness correlation",
     )
     ###
     
