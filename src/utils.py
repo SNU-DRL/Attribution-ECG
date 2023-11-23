@@ -67,6 +67,7 @@ def preprocess(data):
     Standardization
     data.shape: (# samples, frame_size)
     """
+    data = data.astype(np.float32)
     m = np.expand_dims(data.mean(-1), -1)
     s = np.expand_dims(data.std(-1), -1)
     return (data - m) / (s + 1e-6)

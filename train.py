@@ -25,7 +25,10 @@ def main(args):
     model = ModelWrapper(args.model, num_classes=data_module.num_classes)
 
     # hyperparameters
-    criterion = torch.nn.CrossEntropyLoss()
+    if args.multi_label:
+        criterion = torch.nn.BCEWithLogitsLoss() # Multi-label classification
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(
         model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay
     )
@@ -33,7 +36,7 @@ def main(args):
         optimizer, T_max=args.epochs, eta_min=0, last_epoch=-1
     )
 
-    trainer = Trainer(model, criterion, optimizer, scheduler, device, args.result_dir)
+    trainer = Trainer(model, criterion, optimizer, scheduler, device, args.result_dir, data_module.num_classes, args.multi_label)
     trainer.fit(train_loader, test_loader, args.epochs)
 
 
@@ -42,7 +45,7 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["mitdb", "svdb", "incartdb", "icentia11k"]
+        "--dataset", default="icentia11k", type=str, choices=["mitdb", "svdb", "incartdb", "icentia11k", "ptbxl"]
     )
     parser.add_argument(
         "--dataset_path", default="./dataset/data/icentia11k.pkl", type=str
@@ -67,8 +70,9 @@ if __name__ == "__main__":
     parser.add_argument("--result_dir", default="./result_train", type=str)
 
     args = parser.parse_args()
+    args.multi_label = (args.dataset in ["ptbxl"])
     os.makedirs(args.result_dir, exist_ok=True)
-
+    
     # Save arguments
     with open(os.path.join(args.result_dir, "args.json"), "w") as f:
         json.dump(vars(args), f, indent=4)

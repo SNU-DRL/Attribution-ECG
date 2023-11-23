@@ -1,0 +1,23 @@
+,Dx,SNOMEDCTCode,Abbreviation
+0,atrial fibrillation,164889003,AF
+1,atrial flutter,164890007,AFL
+2,complete right bundle branch block,713427006,CRBBB
+3,1st degree av block,270492004,IAVB
+4,incomplete right bundle branch block,713426002,IRBBB
+5,left axis deviation,39732003,LAD
+6,left anterior fascicular block,445118002,LAnFB
+7,left bundle branch block,164909002,LBBB
+8,low qrs voltages,251146004,LQRSV
+9,nonspecific intraventricular conduction disorder,698252002,NSIVCB
+10,sinus rhythm,426783006,NSR
+11,premature atrial contraction,284470004,PAC
+12,pacing rhythm,10370003,PR
+13,prolonged pr interval,164947007,LPR
+14,prolonged qt interval,111975006,LQT
+15,qwave abnormal,164917005,QAb
+16,right axis deviation,47665007,RAD
+17,sinus arrhythmia,427393009,SA
+18,sinus bradycardia,426177001,SB
+19,sinus tachycardia,427084000,STach
+20,t wave abnormal,164934002,TAb
+21,t wave inversion,59931005,TInv

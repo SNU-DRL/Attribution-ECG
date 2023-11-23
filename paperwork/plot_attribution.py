@@ -1,13 +1,12 @@
-import pickle
 import gzip
 import os
+import pickle
 
-import numpy as np
+import matplotlib.offsetbox as offsetbox
 import matplotlib.pyplot as plt
+import numpy as np
 
 from src.utils import LABEL_MAPPING
-import matplotlib.offsetbox as offsetbox
-
 
 plt.rcParams['font.family'] = 'Arial'
 
@@ -50,7 +49,7 @@ def main():
         {"method": "integrated_gradients", "absolute": True},
     ]
     
-    result_dir = "./figures_plot_attribution_mitdb"
+    result_dir = f"./figures_plot_attribution_{DATASET_NAME}"
     os.makedirs(result_dir, exist_ok=True)
     
     for sample_idx in range(1079):

@@ -13,7 +13,7 @@ BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'
 # Feature attribution methods
 PROB_THRESHOLD=0.9
 # ATTR_METHOD=gradcam
-N_SAMPLES=500
+# N_SAMPLES=500
 FEATURE_MASK_SIZE=16
 
 # Settings
@@ -21,6 +21,11 @@ GPU_NUM=0
 
 for ATTR_METHOD in random_baseline input_gradient saliency guided_backprop integrated_gradients deep_lift deep_shap lrp gradcam guided_gradcam lime kernel_shap
 do
+    if [ "$ATTR_METHOD" = "deep_shap" ]; then
+        N_SAMPLES=250
+    else
+        N_SAMPLES=500
+    fi
     for SEED in 1 2 3 4 5
     do
         MODEL_DIR=$BASE_DIR'_seed'$SEED

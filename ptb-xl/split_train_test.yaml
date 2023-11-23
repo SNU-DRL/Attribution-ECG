@@ -1,0 +1,4 @@
+dx_mapping_scored: './label_selection/dx_mapping_targeted.csv'
+split_ratio: 0.2
+source_path: './data/WFDB' # source data parent path
+result_path: "./data/data_ptbxl"

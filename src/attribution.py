@@ -28,7 +28,7 @@ class Attribution:
     Apply feature attribution method to a sample (x, y)
     """
 
-    def __init__(self, model, attr_method, n_samples, feature_mask_size, len_x, device):
+    def __init__(self, model, attr_method, n_samples, feature_mask_size, len_x, num_leads, device):
         self.model = model
         self.attr_method = attr_method
         if attr_method == "random_baseline":
@@ -42,11 +42,12 @@ class Attribution:
         self.n_samples = n_samples
         self.feature_mask_size = feature_mask_size
         self.len_x = len_x
+        self.num_leads = num_leads
         self.device = device
         
         num_feature_mask_elements = math.ceil(len_x / feature_mask_size)
-        feature_mask = np.repeat(np.arange(num_feature_mask_elements), feature_mask_size)
-        self.feature_mask = torch.tensor(feature_mask[:len_x].reshape(1, 1, 1, -1), device=device)
+        feature_mask = np.repeat(np.repeat(np.arange(num_feature_mask_elements), feature_mask_size)[np.newaxis, :], num_leads, axis=0)
+        self.feature_mask = torch.tensor(feature_mask[:, :len_x].reshape(1, 1, num_leads, -1), device=device)
 
     def apply(self, x, y) -> np.ndarray:
         if self.attr_method == "random_baseline":
@@ -61,7 +62,7 @@ class Attribution:
                 x,
                 target=y,
                 baselines=torch.randn(
-                    [250, *list(x.shape[1:])], device=self.device
+                    [self.n_samples, *list(x.shape[1:])], device=self.device
                 ),
             )
         else:
@@ -69,6 +70,6 @@ class Attribution:
 
         # Interpolation for GradCAM
         if self.attr_method == "gradcam":
-            attr_x = LayerAttribution.interpolate(attr_x, (1, x.shape[-1]))
+            attr_x = LayerAttribution.interpolate(attr_x, x.shape[-2:])
 
         return attr_x.detach().cpu().numpy()

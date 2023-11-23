@@ -43,13 +43,26 @@ class ECG_DataModule:
             y_train, y_raw_train = np.array([Y['y'] for Y in train_set["Y"]]), [Y['y_raw'] for Y in train_set["Y"]]
             x_test = np.expand_dims(preprocess(test_set["X"]), axis=(1,2))
             y_test, y_raw_test = np.array([Y['y'] for Y in test_set["Y"]]), [Y['y_raw'] for Y in test_set["Y"]]
+            
+        elif dataset == "ptbxl":
+            data_dict = pickle.load(gzip.GzipFile(self.dataset_path, "rb"))
+            train_set, test_set = data_dict["train"], data_dict["test"]
+            x_train = np.expand_dims(preprocess(train_set["X"]), axis=1)
+            y_train = np.array(train_set["y"], dtype=np.float32)
+            x_test = np.expand_dims(preprocess(test_set["X"]), axis=1)
+            y_test = np.array(test_set["y"], dtype=np.float32)
+            y_raw_train, y_raw_test = None, None            
 
         self.train_set = ECG_Dataset(x_train, y_train, y_raw_train)
         print(f"Loaded dataset for training: {len(self.train_set)}")
         self.test_set = ECG_Dataset(x_test, y_test, y_raw_test)
         print(f"Loaded dataset for test: {len(self.test_set)}")
 
-        self.num_classes = np.unique(np.concatenate([y_train, y_test])).size
+        if dataset == "ptbxl":
+            self.num_classes = y_train.shape[-1]
+        else:
+            self.num_classes = np.unique(np.concatenate([y_train, y_test])).size
+        print(f"Number of unique classes: {self.num_classes}")
 
     def train_dataloader(self):
         return DataLoader(
@@ -120,6 +133,60 @@ def get_eval_attr_data(dataset, dataloader, model, prob_threshold, device):
                 prob_list.append(prob[label])
 
     data_dict = {
+        "x": x_list,
+        "y": y_list,
+        "y_raw": y_raw_list,
+        "beat_spans": beat_spans_list,
+        "prob": prob_list,
+        "length": len(prob_list)
+    }
+
+    return data_dict
+
+@torch.no_grad()
+def get_eval_attr_data_multi_label(dataset, dataloader, model, prob_threshold, target_label, device):
+    """
+    returns dictionary of data for evaluating feature attribution methods.
+    (samples with correct prediction with high prob.)
+    """
+
+    model.eval()
+    model.to(device)
+
+    id_list = []
+    x_list = []
+    y_list = []
+    y_raw_list = []
+    beat_spans_list = []
+    prob_list = []
+
+    print("Prepare dataset for evaluating feature attribution methods...")
+    for idx_batch, data_batch in enumerate(pbar := tqdm(dataloader)):
+        idx, x, y = data_batch
+        x = x.to(device)
+        y_hat = model(x)
+        probs = F.sigmoid(y_hat)
+
+        idx = idx.detach().numpy()
+        x = x.detach().cpu().numpy()
+        y = y.detach().numpy()
+        probs = probs.detach().cpu().numpy()
+
+        # 1) Select samples of target label
+        # 2) Select samples with prob > threshold
+        for i in range(len(idx)):
+            label = y[i]
+            prob = probs[i]
+            if label[target_label] == 1 and prob[target_label] > prob_threshold:
+                id_list.append(idx[i])
+                x_list.append(x[i])
+                y_list.append(label)
+                y_raw_list.append(None)
+                beat_spans_list.append(None)
+                prob_list.append(prob[target_label])
+
+    data_dict = {
+        "id": id_list,
         "x": x_list,
         "y": y_list,
         "y_raw": y_raw_list,
