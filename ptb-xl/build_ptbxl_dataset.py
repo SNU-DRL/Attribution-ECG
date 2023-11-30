@@ -8,9 +8,10 @@ from helper_code import (find_challenge_files, get_labels, load_header,
                          load_recording)
 
 DATA_DIR = "./data/data_ptbxl"
-DATA_DIR_TRAIN = os.path.join(DATA_DIR, "train_2leads")
-DATA_DIR_TEST = os.path.join(DATA_DIR, "test_2leads")
+DATA_DIR_TRAIN = os.path.join(DATA_DIR, "train_4leads")
+DATA_DIR_TEST = os.path.join(DATA_DIR, "test_4leads")
 RESULT_DIR = "./data/data_ptbxl"
+RESULT_FILEPATH = f"{RESULT_DIR}/ptbxl_4leads.pkl"
 LABEL_MAPPING_PATH = "./label_selection/label_mapping.csv"
 os.makedirs(RESULT_DIR, exist_ok=True)
 
@@ -69,7 +70,7 @@ def main():
         result_dict[set_key]["X"] = np.array(X)
         result_dict[set_key]["y"] = y
     
-    with gzip.open(f'{RESULT_DIR}/ptbxl.pkl', 'wb') as f:
+    with gzip.open(RESULT_FILEPATH, 'wb') as f:
         pickle.dump(result_dict, f)
 
 

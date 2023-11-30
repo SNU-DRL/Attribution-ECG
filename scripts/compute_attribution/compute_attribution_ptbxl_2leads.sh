@@ -1,6 +1,6 @@
 # Dataset
 DATASET=ptbxl
-DATASET_PATH=./ptb-xl/data/data_ptbxl/$DATASET.pkl
+DATASET_PATH=./ptb-xl/data/data_ptbxl/$DATASET'_2leads.pkl'
 
 # Model
 MODEL=resnet18_7
@@ -8,7 +8,7 @@ BATCH_SIZE=32
 LEARNING_RATE=1e-4
 WEIGHT_DECAY=1e-4
 EPOCHS=10
-BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
+BASE_DIR=$DATASET'_2leads_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 # Feature attribution methods
 PROB_THRESHOLD=0.75

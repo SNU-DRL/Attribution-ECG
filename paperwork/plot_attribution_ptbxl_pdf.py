@@ -4,6 +4,8 @@ import pickle
 
 import matplotlib.offsetbox as offsetbox
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
 import numpy as np
 import pandas as pd
 
@@ -26,7 +28,6 @@ ATTR_STR_DICT = {
 }
 
 ABS_SIGN = "°"
-
 NUM_LEADS = 4
 LEAD_DICT = {
     0: "Lead I",
@@ -48,11 +49,13 @@ attr_absolute = True
 result_dir = f"./figures_plot_attribution_ptb-xl_4_leads_pdf/{attr_method}"
 if attr_absolute == True:
     result_dir += "_absolute"
-DATA_PATH = f"results_final_231123/results_attribution/ptbxl_4leads_resnet18_7_bs32_lr1e-4_wd1e-4_ep20_seed0/{attr_method}"
+DATA_PATH = f"results_ptbxl/results_attribution/ptbxl_4leads_resnet18_7_bs32_lr1e-4_wd1e-4_ep20_seed0/{attr_method}"
 
 def main():
     class_indices = os.listdir(DATA_PATH)
 
+    os.makedirs(result_dir, exist_ok=True)
+    
     for class_idx in class_indices:
         class_idx = int(class_idx)
         class_name = label_mapping_df.iloc[class_idx]["Dx"]
@@ -66,11 +69,8 @@ def main():
         except FileNotFoundError:
             print(f"Skip class {class_name}")
             continue
-    
-        save_dir = f"{result_dir}/{class_idx}"
-        os.makedirs(save_dir, exist_ok=True)
         
-        for sample_idx in range(len(eval_attr_data["id"])):
+        for sample_idx in range(min(len(eval_attr_data["id"]), 200)):
             sample_id, x, y, beat_spans, prob = (
                 eval_attr_data["id"][sample_idx],
                 eval_attr_data["x"][sample_idx],
@@ -97,7 +97,9 @@ def main():
                 ax1.plot(x.squeeze()[lead_idx], c=ECG_COLOR, linewidth=ECG_LW)
                 ax1.set_yticks([])
                 ax1.set_ylabel(LEAD_DICT[lead_idx], fontdict={"size": 28})
-                
+                if lead_idx == 0:
+                    ax1.set_title(f"ID: {sample_id}, Prob: {prob:.3f}", fontsize=28)
+
                 # Attribution
                 max_abs_attr = np.max(np.abs(attr_x))
                 attr_yrange = (-max_abs_attr * 1.55, max_abs_attr * 1.55)
@@ -132,19 +134,37 @@ def main():
                 ax2.margins(x=0)
 
                 ax1.grid(which="major", axis="x", linestyle="--")
-                
-            save_filename = f"{save_dir}/{sample_id}_{prob:.3f}.png"
-            
-            plt.tight_layout()
-            # plt.subplots_adjust(hspace=0.15)
-            plt.savefig(save_filename)
-            plt.close()
+    
+        save_image(f"{result_dir}/{class_idx}.{label_mapping_df.loc[class_idx]['Dx']}.pdf")
+        plt.close("all")
 
 def get_plot_range(min_value, max_value, coff=1):
     baseline_value = (min_value + max_value) / 2
     amplitude = max_value - baseline_value
     plot_range = (baseline_value - amplitude * coff, baseline_value + amplitude * coff)
     return plot_range
+
+# https://www.geeksforgeeks.org/save-multiple-matplotlib-figures-in-single-pdf-file-using-python/
+def save_image(filename): 
+    
+    # PdfPages is a wrapper around pdf  
+    # file so there is no clash and 
+    # create files with no error. 
+    p = PdfPages(filename) 
+      
+    # get_fignums Return list of existing 
+    # figure numbers 
+    fig_nums = plt.get_fignums()   
+    figs = [plt.figure(n) for n in fig_nums] 
+      
+    # iterating over the numbers in list 
+    for fig in figs:  
+        
+        # and saving the files 
+        fig.savefig(p, format='pdf')  
+          
+    # close the object 
+    p.close()
 
 if __name__ == "__main__":
     main()

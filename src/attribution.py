@@ -45,9 +45,10 @@ class Attribution:
         self.num_leads = num_leads
         self.device = device
         
-        num_feature_mask_elements = math.ceil(len_x / feature_mask_size)
-        feature_mask = np.repeat(np.repeat(np.arange(num_feature_mask_elements), feature_mask_size)[np.newaxis, :], num_leads, axis=0)
-        self.feature_mask = torch.tensor(feature_mask[:, :len_x].reshape(1, 1, num_leads, -1), device=device)
+        num_feature_mask_repeats = math.ceil(len_x / feature_mask_size)
+        feature_mask_rows = [np.repeat(np.arange(num_feature_mask_repeats*i, num_feature_mask_repeats*(i+1)), feature_mask_size) for i in range(self.num_leads)]
+        feature_mask = np.stack(feature_mask_rows).reshape(1,1,num_leads,-1)[:,:,:,:len_x]
+        self.feature_mask = torch.tensor(feature_mask, device=device)
 
     def apply(self, x, y) -> np.ndarray:
         if self.attr_method == "random_baseline":

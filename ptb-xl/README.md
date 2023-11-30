@@ -11,3 +11,7 @@ https://www.kaggle.com/datasets/bjoernjostein/ptbxl-electrocardiography-database
     $ sh extract_leadsets.sh
 ```
 
+3. dataset build
+```
+    $ python build_ptbxl_dataset.py
+```
