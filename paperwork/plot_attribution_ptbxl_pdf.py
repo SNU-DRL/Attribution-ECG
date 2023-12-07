@@ -43,10 +43,10 @@ ATTR_ALPHA = 0.55
 ATTR_LW = 4
 
 label_mapping_df = pd.read_csv("ptb-xl/label_selection/label_mapping.csv", index_col=0)
-attr_method = "guided_gradcam"
-attr_absolute = True
+attr_method = "lime"
+attr_absolute = False
 
-result_dir = f"./figures_plot_attribution_ptb-xl_4_leads_pdf/{attr_method}"
+result_dir = f"./results_ptbxl/figures_plot_attribution_ptb-xl_4leads_pdf/{attr_method}"
 if attr_absolute == True:
     result_dir += "_absolute"
 DATA_PATH = f"results_ptbxl/results_attribution/ptbxl_4leads_resnet18_7_bs32_lr1e-4_wd1e-4_ep20_seed0/{attr_method}"
