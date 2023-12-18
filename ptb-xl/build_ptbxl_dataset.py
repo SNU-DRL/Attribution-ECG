@@ -8,10 +8,10 @@ from helper_code import (find_challenge_files, get_labels, load_header,
                          load_recording)
 
 DATA_DIR = "./data/data_ptbxl"
-DATA_DIR_TRAIN = os.path.join(DATA_DIR, "train_4leads")
-DATA_DIR_TEST = os.path.join(DATA_DIR, "test_4leads")
+DATA_DIR_TRAIN = os.path.join(DATA_DIR, "train")
+DATA_DIR_TEST = os.path.join(DATA_DIR, "test")
 RESULT_DIR = "./data/data_ptbxl"
-RESULT_FILEPATH = f"{RESULT_DIR}/ptbxl_4leads.pkl"
+RESULT_FILEPATH = f"{RESULT_DIR}/ptbxl_12leads.pkl"
 LABEL_MAPPING_PATH = "./label_selection/label_mapping.csv"
 os.makedirs(RESULT_DIR, exist_ok=True)
 

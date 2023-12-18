@@ -73,3 +73,10 @@ The scripts should be executed in the root of this repository.
 ```
 
 Please note that the values of the results may vary slightly if the experiments are run on different machines or different versions of libraries.
+
+---
+
+12-lead survey 만드는 데 사용한 scripts
+1. plot_dist_histogram_ptbxl.py
+2. compute_attribution_ptbxl_selected.py
+3. plot_attribution_ptbxl_pdf_12_survey_v2.py
