@@ -30,5 +30,5 @@ processed_metrics = pd.concat(
 )
 processed_metrics.columns = ["mean", "stddev"]
 dirname, filename = os.path.split(RESULTS_BASE_PATH)
-processed_metrics = processed_metrics.round(4)
+processed_metrics = processed_metrics.round(3) # originally 4
 processed_metrics.to_csv(os.path.join(dirname, f"{filename}.csv"))
