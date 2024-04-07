@@ -4,15 +4,15 @@ import pickle
 
 import numpy as np
 import pandas as pd
-from helper_code import (find_challenge_files, get_labels, load_header,
-                         load_recording)
+from utils import (find_challenge_files, get_labels, load_header,
+                         load_recording, get_id)
 
-DATA_DIR = "./data/data_ptbxl"
+DATA_DIR = "./data/ptbxl"
 DATA_DIR_TRAIN = os.path.join(DATA_DIR, "train")
 DATA_DIR_TEST = os.path.join(DATA_DIR, "test")
-RESULT_DIR = "./data/data_ptbxl"
+RESULT_DIR = "./data"
 RESULT_FILEPATH = f"{RESULT_DIR}/ptbxl_12leads.pkl"
-LABEL_MAPPING_PATH = "./label_selection/label_mapping.csv"
+LABEL_MAPPING_PATH = "./ptb-xl_labels/label_mapping.csv"
 os.makedirs(RESULT_DIR, exist_ok=True)
 
 label_mapping_df = pd.read_csv(LABEL_MAPPING_PATH, index_col=0)
@@ -72,20 +72,6 @@ def main():
     
     with gzip.open(RESULT_FILEPATH, 'wb') as f:
         pickle.dump(result_dict, f)
-
-
-# Extract id from the header
-def get_id(header):
-    sample_id = None
-    for i, l in enumerate(header.split("\n")):
-        if i == 0:
-            try:
-                sample_id = l.split(" ")[0]
-            except:
-                pass
-        else:
-            break
-    return sample_id
 
 if __name__ == "__main__":
     main()
