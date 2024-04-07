@@ -46,7 +46,7 @@ Subset of Icentia11K used for beat classification task in our experiment (sample
 *Original source: [Icentia11k: An Unsupervised ECG Representation Learning Dataset for Arrhythmia Subtype Discovery](https://academictorrents.com/details/af04abfe9a3c96b30e5dd029eb185e19a7055272)*
 
 
-### 5. PTB-XL (for 12-lead survey)
+### 5. PTB-XL
 
 Download a zip file from https://www.kaggle.com/datasets/bjoernjostein/ptbxl-electrocardiography-database/data.
 
