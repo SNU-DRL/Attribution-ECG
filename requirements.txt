@@ -3,4 +3,6 @@ scikit-learn==1.2.2
 tqdm==4.65.0
 pandas==2.0.0
 wfdb==4.1.1
-quantus==0.4.1
+quantus==0.4.3
+pyyaml
+cachetools

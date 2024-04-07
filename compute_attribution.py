@@ -8,7 +8,7 @@ import torch
 from tqdm import tqdm
 
 from src.attribution import ATTRIBUTION_METHODS, Attribution
-from src.dataset import ECG_DataModule, get_eval_attr_data
+from src.dataset import ECG_DataModule, get_eval_attr_data, get_eval_attr_data_multi_label
 from src.setup import setup
 
 
@@ -24,19 +24,27 @@ def main(args):
     model = torch.load(args.model_path, map_location=device)
 
     # initalize evaluator for evaluating feature attribution methods
-    eval_attr_data = get_eval_attr_data(args.dataset, test_loader, model, args.prob_threshold, device)
+    if args.multi_label:
+        eval_attr_data = get_eval_attr_data_multi_label(args.dataset, test_loader, model, args.prob_threshold, args.target_label, device)
+    else:
+        eval_attr_data = get_eval_attr_data(args.dataset, test_loader, model, args.prob_threshold, device)
 
     # compute feature attribution
     model.eval()
     model.to(device)
     
-    attribution = Attribution(model, args.attr_method, args.n_samples, args.feature_mask_size, eval_attr_data["x"][0].shape[-1], device)
+    attribution = Attribution(model, args.attr_method, args.n_samples, args.feature_mask_size, eval_attr_data["x"][0].shape[-1], eval_attr_data["x"][0].shape[-2], device)
 
     attr_list = []
     for idx in tqdm(range(eval_attr_data["length"])):
-        x, y = eval_attr_data["x"][idx], int(eval_attr_data["y"][idx])
-        x = torch.as_tensor(x, device=device).unsqueeze(0)
-        attr_x = attribution.apply(x, y)
+        if args.multi_label:
+            x = eval_attr_data["x"][idx]
+            x = torch.as_tensor(x, device=device).unsqueeze(0)
+            attr_x = attribution.apply(x, args.target_label)
+        else:
+            x, y = eval_attr_data["x"][idx], int(eval_attr_data["y"][idx])
+            x = torch.as_tensor(x, device=device).unsqueeze(0)
+            attr_x = attribution.apply(x, y)
         attr_list.append(attr_x)
 
     # save eval_attr_data & feature attribution
@@ -53,7 +61,7 @@ if __name__ == "__main__":
 
     # Dataset
     parser.add_argument(
-        "--dataset", default="icentia11k", type=str, choices=["mitdb", "svdb", "incartdb", "icentia11k"]
+        "--dataset", default="icentia11k", type=str, choices=["mitdb", "svdb", "incartdb", "icentia11k", "ptbxl"]
     )
     parser.add_argument(
         "--dataset_path", default="./dataset/data/icentia11k.pkl", type=str
@@ -76,7 +84,7 @@ if __name__ == "__main__":
         "--n_samples",
         default=500,
         type=int,
-        help="number of samples used for lime / kernel_shap",
+        help="number of samples used for lime / kernel_shap / deep_shap",
     )
     parser.add_argument(
         "--feature_mask_size",
@@ -90,6 +98,10 @@ if __name__ == "__main__":
         "--gpu_num", default=None, type=str, help="gpu number to use (default: use cpu)"
     )
     parser.add_argument("--seed", default=0, type=int, help="random seed")
+    
+    # Multi-label
+    parser.add_argument("--multi_label", action="store_true")
+    parser.add_argument("--target_label", default=0, type=int, help="target label for multi-label classification")
 
     # Result
     parser.add_argument("--result_dir", default="./result_attr", type=str)

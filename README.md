@@ -1,9 +1,7 @@
-# Evaluating Feature Attribution Methods for Electrocardiogram
-
-This repository contains the code for experiments in our paper, [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
-
-**NOTICE: We revised our paper and experimented with more datasets and evaluation metrics. Our revised paper will be uploaded on arXiv soon.**
-
+# Comprehensive Evaluation of Feature Attribution Methods in Heart Anomaly Detection
+This repository contains the code for evaluating of feature attribution methods in heart anomaly detection tasks using ECG datasets.
+Our paper is currently under review, and we will update the links and experimental scripts once the paper is published.
+Our preliminary study is on arXiv, titled [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
 
 ## How to use
 ### Requirements
@@ -54,13 +52,13 @@ Please refer to [this](dataset/README.md).
         --eval_metric   attribution_localization
         --result_dir    ./result_eval
 ```
-- Available evaluation metrics: "attribution_localization", "auc", "pointing_game", "relevance_mass_accuracy", "relevance_rank_accuracy", "top_k_intersection", "region_perturbation"
+- Available evaluation metrics: "attribution_localization", "auc", "pointing_game", "relevance_mass_accuracy", "relevance_rank_accuracy", "top_k_intersection", "region_perturbation", "faithfulness_correlation"
 - Result: Evaluation results of feature attributions using test samples are saved in the directory specified in `--result_dir` argument.
 
 
 ### Conducting experiments using provided scripts
-The scripts necessary for all our experiments are located in the `script` directory.
-To obtain the final results displayed in our paper, please execute the scripts in the following order:
+The scripts for our experiments are located in the `script` directory.
+Please execute the scripts in the following order:
 - `scripts/train/train_*.sh`
 - `scripts/compute_attribution/compute_attribution_*.sh`
 - `scripts/evaluate_attribution/evaluate_attribution_*.sh`

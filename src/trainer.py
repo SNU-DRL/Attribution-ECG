@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
-
+from sklearn.metrics import roc_auc_score
 
 class Trainer:
     """
@@ -26,18 +26,27 @@ class Trainer:
 
     """
 
-    def __init__(self, model, criterion, optimizer, scheduler, device, result_dir):
+    def __init__(self, model, criterion, optimizer, scheduler, device, result_dir, num_classes, multi_label=False):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.device = device
         self.result_dir = result_dir
+        self.num_classes = num_classes
+        self.multi_label = multi_label
 
         self.model.to(self.device)
-        self.metrics_df = pd.DataFrame(
-            columns=["epoch", "train_loss", "train_acc", "val_loss", "val_acc"]
-        )
+        if multi_label:
+            self.metric = "auc"
+            self.metrics_df = pd.DataFrame(
+                columns=["epoch", "train_loss", "train_auc", "val_loss", "val_auc"] + [f"auc_{class_idx}" for class_idx in range(self.num_classes)]
+            )
+        else:
+            self.metric = "acc"
+            self.metrics_df = pd.DataFrame(
+                columns=["epoch", "train_loss", "train_acc", "val_loss", "val_acc"]
+            )
 
     def fit(self, train_loader, val_loader, epochs):
         """
@@ -57,23 +66,32 @@ class Trainer:
         # ---- train process ----
         for epoch in range(1, epochs + 1):
             # train
-            train_loss, train_accuracy = self._train(train_loader)
+            if self.multi_label:
+                train_loss, train_score, train_aucs = self._train(train_loader)
+            else:
+                train_loss, train_score = self._train(train_loader)
             print(
-                f"- [{epoch:03d}/{epochs:03d}] Train loss: {train_loss:.4f}, Train accuracy: {train_accuracy:.4f}, learning rate: {self.scheduler.get_last_lr()[0]:.6f}"
+                f"- [{epoch:03d}/{epochs:03d}] Train loss: {train_loss:.4f}, Train {self.metric}: {train_score:.4f}, learning rate: {self.scheduler.get_last_lr()[0]:.6f}"
             )
 
             # validate
-            val_loss, val_accuracy = self._validate(val_loader)
+            if self.multi_label:
+                val_loss, val_score, val_aucs = self._validate(val_loader)        
+            else:
+                val_loss, val_score = self._validate(val_loader)
             print(
-                f"- [{epoch:03d}/{epochs:03d}] Validation loss: {val_loss:.4f}, Validation accuracy: {val_accuracy:.4f}"
+                f"- [{epoch:03d}/{epochs:03d}] Validation loss: {val_loss:.4f}, Validation {self.metric}: {val_score:.4f}"
             )
             epoch_metrics_dict = {
                 "epoch": epoch,
                 "train_loss": train_loss,
-                "train_acc": train_accuracy,
+                f"train_{self.metric}": train_score,
                 "val_loss": val_loss,
-                "val_acc": val_accuracy,
+                f"val_{self.metric}": val_score,
             }
+            if self.multi_label:
+                aucs_dict = {f"auc_{class_idx}": val_aucs[class_idx] for class_idx in range(self.num_classes)}
+                epoch_metrics_dict.update(aucs_dict)
             self._log(epoch_metrics_dict)
             self.scheduler.step()
             print("*" * 30)
@@ -109,7 +127,10 @@ class Trainer:
             _, x, y = data_batch
             x, y = x.to(self.device), y.to(self.device)
             y_hat = self.model(x)
-            _probs = F.softmax(y_hat, dim=1)
+            if self.multi_label:
+                _probs = F.sigmoid(y_hat)
+            else:
+                _probs = F.softmax(y_hat, dim=1)
 
             self.optimizer.zero_grad()
             loss = self._compute_loss(y_hat, y)
@@ -121,13 +142,20 @@ class Trainer:
             labels.extend(y)
             probs.extend(_probs)
 
-        labels = torch.tensor(labels).detach().cpu().numpy()
         probs = torch.stack(probs).detach().cpu().numpy()
-
         total_loss /= len(loader.dataset)
-        accuracy = self._compute_accuracy(labels, probs)
 
-        return total_loss, accuracy
+        if self.multi_label:
+            # multi-label
+            labels = torch.stack(labels).detach().cpu().numpy()
+            score, aucs = self._compute_auc_multi_label(labels, probs)
+            return total_loss, score, aucs
+        else:
+            # single-label
+            labels = torch.tensor(labels).detach().cpu().numpy()
+            score = self._compute_accuracy(labels, probs)
+            return total_loss, score
+
 
     @torch.no_grad()
     def _validate(self, loader):
@@ -141,7 +169,10 @@ class Trainer:
             _, x, y = data_batch
             x, y = x.to(self.device), y.to(self.device)
             y_hat = self.model(x)
-            _probs = F.softmax(y_hat, dim=1)
+            if self.multi_label:
+                _probs = F.sigmoid(y_hat)
+            else:
+                _probs = F.softmax(y_hat, dim=1)
 
             loss = self._compute_loss(y_hat, y)
             total_loss += y_hat.shape[0] * loss.item()
@@ -150,13 +181,20 @@ class Trainer:
             labels.extend(y)
             probs.extend(_probs)
 
-        labels = torch.tensor(labels).detach().cpu().numpy()
         probs = torch.stack(probs).detach().cpu().numpy()
-
         total_loss /= len(loader.dataset)
-        accuracy = self._compute_accuracy(labels, probs)
 
-        return total_loss, accuracy
+        if self.multi_label:
+            # multi-label
+            labels = torch.stack(labels).detach().cpu().numpy()
+            score, aucs = self._compute_auc_multi_label(labels, probs)
+            return total_loss, score, aucs
+        else:
+            # single-label
+            labels = torch.tensor(labels).detach().cpu().numpy()
+            score = self._compute_accuracy(labels, probs)
+            return total_loss, score
+
 
     def _compute_loss(self, y_hat, y):
         loss = self.criterion(y_hat, y)
@@ -171,3 +209,9 @@ class Trainer:
         acc = (labels == preds).mean()
 
         return acc
+
+    def _compute_auc_multi_label(self, labels, probs):
+        # One-vs-Rest multiclass ROC
+        aucs = roc_auc_score(labels, probs, average=None, multi_class="ovr")
+        macro_auc = np.mean(aucs)
+        return macro_auc, aucs
