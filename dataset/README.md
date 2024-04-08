@@ -1,5 +1,5 @@
 ## Dataset
-Download each data source to the `/dataset/data` directory, and build datasets from the sources.
+The resulting files are named `{DATASET_NAME}.pkl` and will be located in the `data` directory.
 
 ### 1. MIT-BIH Arrhythmia Database (MITDB)
 
@@ -54,7 +54,7 @@ Download a zip file from https://www.kaggle.com/datasets/bjoernjostein/ptbxl-ele
     mkdir source
     // move the downloaded `archive.zip` into the `source/`
     unzip source/archive.zip -d source/
-    python split_train_test.py
+    python ptbxl_split_train_test.py
     python build_ptbxl_dataset.py
 ```
 

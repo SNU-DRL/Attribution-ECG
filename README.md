@@ -1,5 +1,5 @@
 # Comprehensive Evaluation of Feature Attribution Methods in Heart Anomaly Detection
-This repository contains the code for evaluating of feature attribution methods in heart anomaly detection tasks using ECG datasets.
+This repository contains the code for evaluating feature attribution methods in heart anomaly detection tasks using ECG datasets.
 Our paper is currently under review, and we will update the links and experimental scripts once the paper is published.
 Our preliminary study is on arXiv, titled [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
 
