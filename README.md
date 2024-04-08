@@ -67,7 +67,8 @@ The scripts should be executed in the root of this repository.
 ```
     sh scripts/train/train_icentia11k.sh
     sh scripts/compute_attribution/compute_attribution_icentia11k.sh
-    sh scripts/evaluate_attribution/evaluate_attribution_icentia11k.sh
+    sh scripts/evaluate_attribution/evaluate_attribution_icentia11k_localization.sh
+    sh scripts/evaluate_attribution/evaluate_attribution_icentia11k_perturbation.sh
 ```
 
 Please note that the values of the results may vary slightly if the experiments are run on different machines or different versions of libraries.
