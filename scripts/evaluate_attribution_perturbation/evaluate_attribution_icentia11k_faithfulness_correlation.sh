@@ -20,10 +20,10 @@ do
     for SEED in 1 2 3 4 5
     do
         MODEL_DIR=$BASE_DIR'_seed'$SEED
-        MODEL_PATH=results_for_paper/results_training/$MODEL_DIR/model_last.pt
-        ATTR_DIR=results_for_paper/results_attribution/$MODEL_DIR/$ATTR_METHOD
+        MODEL_PATH=results_training/$MODEL_DIR/model_last.pt
+        ATTR_DIR=results_attribution/$MODEL_DIR/$ATTR_METHOD
 
-        RESULT_DIR=results_evaluation_faithfulness/$MODEL_DIR/$ATTR_METHOD
+        RESULT_DIR=results_evaluation_perturbation/$MODEL_DIR/$ATTR_METHOD
         
         python evaluate_attribution.py \
             --attr_dir $ATTR_DIR \
@@ -44,4 +44,4 @@ do
     done
 done
 
-python analysis/summarize_evaluation.py results_evaluation_faithfulness/$BASE_DIR
+python analysis/summarize_evaluation.py results_evaluation_perturbation/$BASE_DIR

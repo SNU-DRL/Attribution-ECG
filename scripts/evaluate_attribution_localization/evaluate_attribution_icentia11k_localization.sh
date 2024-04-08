@@ -19,8 +19,8 @@ do
         for SEED in 1 2 3 4 5
         do
             MODEL_DIR=$BASE_DIR'_seed'$SEED
-            MODEL_PATH=results_for_paper/results_training/$MODEL_DIR/model_last.pt
-            ATTR_DIR=results_for_paper/results_attribution/$MODEL_DIR/$ATTR_METHOD
+            MODEL_PATH=results_training/$MODEL_DIR/model_last.pt
+            ATTR_DIR=results_attribution/$MODEL_DIR/$ATTR_METHOD
 
             RESULT_DIR=results_evaluation_localization/$MODEL_DIR/$ATTR_METHOD
             python evaluate_attribution.py \
