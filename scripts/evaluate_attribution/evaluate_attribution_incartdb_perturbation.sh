@@ -1,5 +1,5 @@
 # Dataset
-DATASET=icentia11k
+DATASET=incartdb
 
 # Model
 MODEL=resnet18_7
