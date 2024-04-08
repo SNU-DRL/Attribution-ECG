@@ -4,7 +4,6 @@ import random
 import numpy as np
 import torch
 
-
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 
 def set_random_seed(SEED):

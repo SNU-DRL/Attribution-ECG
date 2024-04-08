@@ -59,6 +59,7 @@ Download a zip file from https://www.kaggle.com/datasets/bjoernjostein/ptbxl-ele
 ```
 
 When building the PTB-XL dataset, we used 22 labels utilized as target labels in the [PhysioNet/CinC Challenge 2021](https://github.com/physionetchallenges/evaluation-2021/blob/main/dx_mapping_scored.csv).
+The 22 labels are listed in `ptbxl_labels/label_mapping.csv`.
 The following pairs of labels were regarded as equivalent, as suggested by the challenge.
 
 | Label 1                            | Label 2                          |

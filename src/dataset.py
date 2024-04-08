@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from src.utils import preprocess, get_beat_spans
+from src.utils import get_beat_spans, preprocess
 
 
 class ECG_DataModule:

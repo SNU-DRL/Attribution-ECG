@@ -12,8 +12,6 @@ BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'
 
 # Feature attribution methods
 PROB_THRESHOLD=0.9
-# ATTR_METHOD=gradcam
-# N_SAMPLES=500
 FEATURE_MASK_SIZE=16
 
 # Settings
