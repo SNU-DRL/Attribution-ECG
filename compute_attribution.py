@@ -8,7 +8,8 @@ import torch
 from tqdm import tqdm
 
 from src.attribution import ATTRIBUTION_METHODS, Attribution
-from src.dataset import ECG_DataModule, get_eval_attr_data, get_eval_attr_data_multi_label
+from src.dataset import (ECG_DataModule, get_eval_attr_data,
+                         get_eval_attr_data_multi_label)
 from src.setup import setup
 
 

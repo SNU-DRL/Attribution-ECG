@@ -1,14 +1,14 @@
-import pandas as pd
 import glob
-import os
-import shutil
-import random
 import math
-from utils import set_random_seed, get_is_scored, get_labels_from_filename
+import os
+import random
+import shutil
 
-pd.options.mode.chained_assignment = None  # default='warn'
+import pandas as pd
 
-DX_MAPPING_PATH = "./ptb-xl_labels/dx_mapping_targeted.csv"
+from utils import get_is_scored, get_labels_from_filename, set_random_seed
+
+DX_MAPPING_PATH = "./ptbxl_labels/dx_mapping_targeted.csv"
 SPLIT_RATIO = 0.2
 SOURCE_PATH = "./source/WFDB"
 RESULT_PATH = "./data/ptbxl"
@@ -24,9 +24,9 @@ def main():
     scored_set = set(scored_labels)
 
     train_label_df = dx_mapping_scored.iloc[:, 0:3]
-    train_label_df.loc["ptbxl"] = 0
+    train_label_df = train_label_df.assign(ptbxl=[0] * len(train_label_df))
     test_label_df = dx_mapping_scored.iloc[:, 0:3]
-    test_label_df["ptbxl"] = 0
+    test_label_df = test_label_df.assign(ptbxl=[0] * len(test_label_df))
 
     header_files = glob.glob(f'{SOURCE_PATH}/*.hea')
     header_files.sort()
@@ -47,8 +47,6 @@ def main():
     df['is_test'] = [True if t in test_indices else False for t in range(num_samples)]
     assert df['is_test'].sum() == num_test_samples
     print(f'# of training samples: {num_train_samples}, # of test samples: {num_test_samples}')
-
-
 
     train_header_list = df.query('not is_test')['header'].tolist()
     test_header_list = df.query('is_test')['header'].tolist()
@@ -77,14 +75,14 @@ def main():
         labels = get_labels_from_filename(row['header'])
         for label in labels:
             if label in scored_labels:
-                train_label_df.loc[train_label_df.SNOMEDCTCode == label, 'ptbxl']+= 1
+                train_label_df.loc[train_label_df.SNOMEDCTCode == label, 'ptbxl'] += 1
 
     test_df = df[df.is_test == True]
     for idx, row in test_df.iterrows():
         labels = get_labels_from_filename(row['header'])
         for label in labels:
             if label in scored_labels:
-                test_label_df.loc[test_label_df.SNOMEDCTCode == label, 'ptbxl']+= 1
+                test_label_df.loc[test_label_df.SNOMEDCTCode == label, 'ptbxl'] += 1
 
     train_label_df.to_csv(os.path.join(RESULT_PATH, "train_label_dist.csv"))
     test_label_df.to_csv(os.path.join(RESULT_PATH, "test_label_dist.csv"))
@@ -92,5 +90,3 @@ def main():
 if __name__ == "__main__":
     set_random_seed(42)
     main()
-
-

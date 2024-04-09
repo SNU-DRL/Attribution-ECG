@@ -4,15 +4,16 @@ import pickle
 
 import numpy as np
 import pandas as pd
-from utils import (find_challenge_files, get_labels, load_header,
-                         load_recording, get_id)
+
+from utils import (find_challenge_files, get_id, get_labels, load_header,
+                   load_recording)
 
 DATA_DIR = "./data/ptbxl"
 DATA_DIR_TRAIN = os.path.join(DATA_DIR, "train")
 DATA_DIR_TEST = os.path.join(DATA_DIR, "test")
 RESULT_DIR = "./data"
-RESULT_FILEPATH = f"{RESULT_DIR}/ptbxl_12leads.pkl"
-LABEL_MAPPING_PATH = "./ptb-xl_labels/label_mapping.csv"
+RESULT_FILEPATH = f"{RESULT_DIR}/ptbxl.pkl"
+LABEL_MAPPING_PATH = "./ptbxl_labels/label_mapping.csv"
 os.makedirs(RESULT_DIR, exist_ok=True)
 
 label_mapping_df = pd.read_csv(LABEL_MAPPING_PATH, index_col=0)

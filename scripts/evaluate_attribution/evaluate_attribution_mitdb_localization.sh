@@ -1,10 +1,10 @@
 # Dataset
-DATASET=icentia11k
+DATASET=mitdb
 
 # Model
 MODEL=resnet18_7
 BATCH_SIZE=32
-LEARNING_RATE=1e-3
+LEARNING_RATE=5e-2
 WEIGHT_DECAY=1e-4
 EPOCHS=20
 BASE_DIR=$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
@@ -19,8 +19,8 @@ do
         for SEED in 1 2 3 4 5
         do
             MODEL_DIR=$BASE_DIR'_seed'$SEED
-            MODEL_PATH=results_for_paper/results_training/$MODEL_DIR/model_last.pt
-            ATTR_DIR=results_for_paper/results_attribution/$MODEL_DIR/$ATTR_METHOD
+            MODEL_PATH=results_training/$MODEL_DIR/model_last.pt
+            ATTR_DIR=results_attribution/$MODEL_DIR/$ATTR_METHOD
 
             RESULT_DIR=results_evaluation_localization/$MODEL_DIR/$ATTR_METHOD
             python evaluate_attribution.py \

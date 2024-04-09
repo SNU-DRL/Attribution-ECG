@@ -6,8 +6,9 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
-from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
+from tqdm import tqdm
+
 
 class Trainer:
     """

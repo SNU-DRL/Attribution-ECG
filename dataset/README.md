@@ -1,5 +1,5 @@
 ## Dataset
-Download each data source to the `/dataset/data` directory, and build datasets from the sources.
+The resulting files are named `{DATASET_NAME}.pkl` and will be located in the `data` directory.
 
 ### 1. MIT-BIH Arrhythmia Database (MITDB)
 
@@ -54,11 +54,12 @@ Download a zip file from https://www.kaggle.com/datasets/bjoernjostein/ptbxl-ele
     mkdir source
     // move the downloaded `archive.zip` into the `source/`
     unzip source/archive.zip -d source/
-    python split_train_test.py
+    python ptbxl_split_train_test.py
     python build_ptbxl_dataset.py
 ```
 
 When building the PTB-XL dataset, we used 22 labels utilized as target labels in the [PhysioNet/CinC Challenge 2021](https://github.com/physionetchallenges/evaluation-2021/blob/main/dx_mapping_scored.csv).
+The 22 labels are listed in `ptbxl_labels/label_mapping.csv`.
 The following pairs of labels were regarded as equivalent, as suggested by the challenge.
 
 | Label 1                            | Label 2                          |

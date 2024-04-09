@@ -1,6 +1,6 @@
 # Dataset
 DATASET=ptbxl
-DATASET_PATH=./ptb-xl/data/data_ptbxl/$DATASET'_12leads.pkl'
+DATASET_PATH=./dataset/data/$DATASET.pkl
 
 # Model
 MODEL=resnet18_7
@@ -14,7 +14,7 @@ EPOCHS=20
 # Settings
 GPU_NUM=0
 
-RESULT_BASE_DIR='results_ptbxl/results_training/'$DATASET'_12leads_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
+RESULT_BASE_DIR='results_training/'$DATASET'_'$MODEL'_bs'$BATCH_SIZE'_lr'$LEARNING_RATE'_wd'$WEIGHT_DECAY'_ep'$EPOCHS
 
 for SEED in 0
 do
