@@ -1,7 +1,27 @@
-# Comprehensive Evaluation of Feature Attribution Methods in Heart Anomaly Detection
+# Visual interpretation of deep learning model in ECG classification: A comprehensive evaluation of feature attribution methods
 This repository contains the code for evaluating feature attribution methods in heart anomaly detection tasks using ECG datasets.
-Our paper is currently under review, and we will update the links and experimental scripts once the paper is published.
-Our preliminary study is on arXiv, titled [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
+
+- Our paper is published in [Computers in Biology and Medicine, November 2024.](https://www.sciencedirect.com/science/article/pii/S0010482524011739)
+- Our preliminary study is on arXiv, titled [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
+
+## Abstract
+Feature attribution methods can visually highlight specific input regions containing influential aspects affecting a deep learning model’s prediction. Recently, the use of feature attribution methods in electrocardiogram (ECG) classification has been sharply increasing, as they assist clinicians in understanding the model’s decision-making process and assessing the model’s reliability. However, a careful study to identify suitable methods for ECG datasets has been lacking, leading researchers to select methods without a thorough understanding of their appropriateness. In this work, we conduct a large-scale assessment by considering eleven popular feature attribution methods across five large ECG datasets using a model based on the ResNet-18 architecture. Our experiments include both automatic evaluations and human evaluations. Annotated datasets were utilized for automatic evaluations and three cardiac experts were involved for human evaluations. We found that Guided Grad-CAM, particularly when its absolute values are utilized, achieves the best performance. When Guided GradCAM was utilized as the feature attribution method, cardiac experts confirmed that it can identify diagnostically relevant electrophysiological characteristics, although its effectiveness varied across the 17 different diagnoses that we have investigated.
+
+## Citation
+If you find our repository or paper useful, please consider citing our work:
+```
+@article{suh2024visual,
+    author = {Jangwon Suh and Jimyeong Kim and Soonil Kwon and Euna Jung and Hyo-Jeong Ahn and Kyung-Yeon Lee and Eue-Keun Choi and Wonjong Rhee}
+    title = {Visual interpretation of deep learning model in ECG classification: A comprehensive evaluation of feature attribution methods},
+    journal = {Computers in Biology and Medicine},
+    volume = {182},
+    pages = {109088},
+    year = {2024},
+    issn = {0010-4825},
+    doi = {https://doi.org/10.1016/j.compbiomed.2024.109088},
+    url = {https://www.sciencedirect.com/science/article/pii/S0010482524011739},
+}
+```
 
 ## Requirements
 This experiment was implemented using the following libraries:
