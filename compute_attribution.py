@@ -100,7 +100,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--seed", default=0, type=int, help="random seed")
     
-    # Multi-label
+    # Multi-label (for ptbxl)
     parser.add_argument("--multi_label", action="store_true")
     parser.add_argument("--target_label", default=0, type=int, help="target label for multi-label classification")
 

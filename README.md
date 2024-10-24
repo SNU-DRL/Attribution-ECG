@@ -1,8 +1,13 @@
 # Visual interpretation of deep learning model in ECG classification: A comprehensive evaluation of feature attribution methods
-This repository contains the code for evaluating feature attribution methods in heart anomaly detection tasks using ECG datasets.
 
-- Our paper is published in [Computers in Biology and Medicine, November 2024.](https://www.sciencedirect.com/science/article/pii/S0010482524011739)
-- Our preliminary study is on arXiv, titled [*EVALUATING FEATURE ATTRIBUTION METHODS FOR ELECTROCARIDOGRAM*](https://arxiv.org/abs/2211.12702).
+This repository contains the code for the experiments conduted in our article titled [Visual interpretation of deep learning model in ECG classification: A comprehensive evaluation of feature attribution methods](https://www.sciencedirect.com/science/article/pii/S0010482524011739).
+It provides the code for evaluating feature attribution methods in heart anomaly detection tasks using ECG datasets.
+
+<p align="center">
+    <img src="images/overview.jpg" width="90%">
+</p>
+
+- A preliminary study related to this research is available on arXiv, titled [*Evaluating Feature Attribution Methods for Electrocardiogram*](https://arxiv.org/abs/2211.12702).
 
 ## Abstract
 Feature attribution methods can visually highlight specific input regions containing influential aspects affecting a deep learning model’s prediction. Recently, the use of feature attribution methods in electrocardiogram (ECG) classification has been sharply increasing, as they assist clinicians in understanding the model’s decision-making process and assessing the model’s reliability. However, a careful study to identify suitable methods for ECG datasets has been lacking, leading researchers to select methods without a thorough understanding of their appropriateness. In this work, we conduct a large-scale assessment by considering eleven popular feature attribution methods across five large ECG datasets using a model based on the ResNet-18 architecture. Our experiments include both automatic evaluations and human evaluations. Annotated datasets were utilized for automatic evaluations and three cardiac experts were involved for human evaluations. We found that Guided Grad-CAM, particularly when its absolute values are utilized, achieves the best performance. When Guided GradCAM was utilized as the feature attribution method, cardiac experts confirmed that it can identify diagnostically relevant electrophysiological characteristics, although its effectiveness varied across the 17 different diagnoses that we have investigated.
@@ -34,6 +39,11 @@ This experiment was implemented using the following libraries:
 ```
 
 ## Getting started
+
+### Workflow diagram
+<p align="center">
+    <img src="images/workflow.jpg" width="90%">
+</p>
 
 ### Building datasets
 Please refer to [this](dataset/README.md).
