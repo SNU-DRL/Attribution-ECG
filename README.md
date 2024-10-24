@@ -1,6 +1,6 @@
 # Visual interpretation of deep learning model in ECG classification: A comprehensive evaluation of feature attribution methods
 
-This repository contains the code for the experiments conduted in our article titled [Visual interpretation of deep learning model in ECG classification: A comprehensive evaluation of feature attribution methods](https://www.sciencedirect.com/science/article/pii/S0010482524011739).
+This repository contains the code for the experiments conduted in our research paper titled [*Visual interpretation of deep learning model in ECG classification: A comprehensive evaluation of feature attribution methods*](https://www.sciencedirect.com/science/article/pii/S0010482524011739).
 It provides the code for evaluating feature attribution methods in heart anomaly detection tasks using ECG datasets.
 
 <p align="center">
